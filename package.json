@@ -15,6 +15,7 @@
     "multiparty": "latest",
     "sqlite3": "3.1.0",
     "mime": "latest",
-    "express": "latest"
+    "express": "latest",
+    "querystring": "latest"
   }
 }
