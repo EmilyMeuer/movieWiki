@@ -1,4 +1,5 @@
 //This is built-in module
+var express = require('express');
 var fs = require('fs');
 var path = require('path');
 var http = require('http');
@@ -11,10 +12,11 @@ var sqlite3 = require('sqlite3').verbose();
 
 
 var db = new sqlite3.Database('../imdb.sqlite3');
-
+var app = express();
 var port = 8011;
 var public_dir = path.join(__dirname, 'public');
 
+/*
 var server = http.createServer((req,res) => {
     var req_url = url.parse(req.url);
     var filename = req_url.pathname.substring(1);
@@ -42,15 +44,32 @@ var server = http.createServer((req,res) => {
         if(filename === 'search'){
             var form = new multiparty.Form();
             form.parse(req, (err, fields, files) => {
-               console.log(fields);
-
                 res.writeHead(200, {'Content-Type' : 'text/plain'});
-                res.write('Successfully subscribe');
+                res.write('Wait for html template');
                 res.end();
             });
         }
     }
 });
+*/
+
+//serve all files in public directory
+app.use(express.static(public_dir));
+
+//GET method with /search
+//users should not do it this way
+//give error
+app.get('/search', (req, res) => {
+    var resStr = 'Wrong action, please go back to home page.';
+    resStr += '<br/><a href="/index.html">home page</a>';
+    res.send(resStr);
+});
+
+//testing the POST method with /search
+app.post('/search', (req, res) => {
+   res.sendFile(public_dir + '/results-template.html');
+});
+
 
 var sql = "SELECT * FROM Titles WHERE primary_title LIKE '%spiderman%'; ";
 
@@ -67,6 +86,6 @@ var hello = function(err, rows){
 
 console.log("now listening at port: " + port);
 
-server.listen(port, '0.0.0.0');
+app.listen(port, '0.0.0.0');
 
 db.close();
