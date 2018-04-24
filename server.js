@@ -15,6 +15,8 @@ var app = express();
 var port = 8011;
 var public_dir = path.join(__dirname, 'public');
 
+
+var server = http.createServer(app);
 /*
 var server = http.createServer((req,res) => {
     var req_url = url.parse(req.url);
@@ -105,6 +107,8 @@ app.post('/search', (req, res) => {
                         if(err){
                             console.log(err);
                         }else{
+
+/*
                             var table_html_code = "<div class='list-group'>";
 
                             for(var i=0; i<rows.length; i++){
@@ -114,7 +118,41 @@ app.post('/search', (req, res) => {
                             }
 
                             table_html_code += "</div>";
-                            //console.log(table_html_code);
+*/
+
+                            var table_html_code =
+                                '<table class="table">' +
+                                    '<thead class="thead-dark">' +
+                                        '<tr>' +
+                                            '<th scope="col">Number</th>' +
+                                            '<th scope="col">Title</th>' +
+                                            '<th scope="col">Type</th>' +
+                                            '<th scope="col">Started Year</th>' +
+                                            '<th scope="col">Ended Year</th>' +
+                                        '</tr>' +
+                                    '</thead>' +
+                                    '<tbody>';
+
+                            for(var i=0; i<rows.length; i++){
+                                var end_year;
+                                if(rows[i].end_year === null){
+                                    end_year = '-';
+                                }else{
+                                    end_year = rows[i].end_year;
+                                }
+
+                                table_html_code += '<tr>' +
+                                    '<th scope="row">' + (i+1) + '</th>' +
+                                    '<td>' +
+                                    '<a href=\"#\" class=\"list-group-item-action \">' +
+                                    rows[i].primary_title + '</a>' + '</td>' +
+                                    '<td>' + rows[i].title_type +'</td>' +
+                                    '<td>' + rows[i].start_year +'</td>' +
+                                    '<td>' + end_year +'</td>' +
+                                    '</tr>';
+                            }
+
+                            table_html_code += "</tbody></table>";
 
                             res.writeHead(200, {'Content' : 'text/html'});
                             var html_code = data.toString('utf8');
@@ -152,4 +190,4 @@ var hello = function(err, rows){
 
 console.log("now listening at port: " + port);
 
-app.listen(port, '0.0.0.0');
+server.listen(port, '0.0.0.0');
