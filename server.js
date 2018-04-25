@@ -130,10 +130,10 @@ app.get('/individual', (req, res) => {
 
                     if(url_query.type === "Titles"){
                         //need function
-                        table_html_code = "<p>Movie info</p>";
+                        table_html_code = individual_movie_html(rows[0]);
                     }else{
                         //need function
-                        table_html_code = "<p>Person info</p>";
+                        table_html_code = individual_person_html(rows[0]);
                     }
 
                     res.writeHead(200, {'Content' : 'text/html'});
@@ -150,8 +150,47 @@ app.get('/individual', (req, res) => {
 
 });
 
+function individual_movie_html(sql_result){
+    var html_code = "";
+
+    console.log(sql_result);
+/*
+    html_code += '<div class="row">' +
+                    '<div class="col-8">' +
+                        //movie info here
+                        '<h2>'+ sql_result.primary_title +'</h2>' +
+                        '<p>Movie type: ' + sql_result.title_type +'</p>' +
+                        '<p>Start year: ' + sql_result.start_year +'</p>' +
+                        '<p>End year: ' + sql_result.end_year +'</p>' +
+                        '<p>Movie type: ' + sql_result.title_type +'</p>' +
+                    '</div>' +
+                    '<div class="col-4">' +
+                        //movie picture here
+                    'pic here' +
+                    '</div>' +
+                '</div>';
+*/
+
+    return html_code;
+}
+
+function individual_person_html(sql_result){
+    var html_code = "person here";
 
 
+    html_code += '<div class="row">' +
+                    '<div class="col-8">' +
+                        // info here
+                        '' +
+                    '</div>' +
+                    '<div class="col-4">' +
+                        //movie picture here
+                        'pic here' +
+                    '</div>' +
+                '</div>';
+
+    return html_code;
+}
 
 function title_table_html(sql_result) {
     var table_html_code =
