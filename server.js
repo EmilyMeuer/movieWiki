@@ -17,58 +17,19 @@ var public_dir = path.join(__dirname, 'public');
 
 
 var server = http.createServer(app);
-/*
-var server = http.createServer((req,res) => {
-    var req_url = url.parse(req.url);
-    var filename = req_url.pathname.substring(1);
-
-    if(filename === '') filename = 'index.html';
-
-    if(req.method === 'GET'){
-        fs.readFile(path.join(public_dir, filename), (err, data) => {
-            if(err){
-                res.writeHead(404, {'Content-Type': 'text/plain'});
-                res.write('Oh, no! Counld\'t find that page' );
-                res.end();
-            }
-            else{
-                var ext = path.extname(filename).substring(1);
-                console.log('serving file' + filename + ' (type = ' + mime.getType(ext) + ')');
-                res.writeHead(200, {'Content-Type' : mime.getType(ext) || 'text/plain'});
-                res.write(data);
-                res.end();
-            }
-        });
-    }
-
-    else if (req.method === "POST"){
-        if(filename === 'search'){
-            var form = new multiparty.Form();
-            form.parse(req, (err, fields, files) => {
-                res.writeHead(200, {'Content-Type' : 'text/plain'});
-                res.write('Wait for html template');
-                res.end();
-            });
-        }
-    }
-});
-*/
-
 //serve all files in public directory
 app.use(express.static(public_dir));
 
-//GET method with /search
-//users should not do it this way
-//give error
+//GET method with /search users should not do it this way give error
 app.get('/search', (req, res) => {
     var req_url = url.parse(req.url);
     var query = querystring.parse(req_url.query);
 
     console.log(query);
 
-    res.writeHead(404, {'Content-Type' : 'text/plain'});
+    res.writeHead(404, {'Content-Type' : 'text/html'});
     var resStr = 'Wrong action, please go back to home page.';
-    resStr += '<br/><a href="/index.html">home page</a>';
+    resStr += '<br/><a href=\"/index.html\">home page</a>';
     res.write(resStr);
     res.end();
 });
@@ -85,13 +46,14 @@ app.post('/search', (req, res) => {
             res.write(resStr);
             res.end();
         }else{
+            var sql = "";
 
-            var fieldsStr = "Type: ";
-            fieldsStr += fields.type[0];
-            fieldsStr += "<br/>" + "Content: ";
-            fieldsStr += fields.content[0];
+            if(fields.type[0] === "Title"){
+                sql = "SELECT * FROM Titles WHERE primary_title LIKE '%" + fields.content[0] +"%'";
+            }else{
+                sql = "SELECT * FROM Names WHERE primary_name LIKE '%" + fields.content[0] + "%'";
+            }
 
-            var sql = "SELECT * FROM Titles WHERE primary_title LIKE '%" + fields.content[0] +"%'";
             console.log(sql);
 
             fs.readFile('public/results-template.html', (err, data) => {
@@ -107,52 +69,13 @@ app.post('/search', (req, res) => {
                         if(err){
                             console.log(err);
                         }else{
+                            var table_html_code = "";
 
-/*
-                            var table_html_code = "<div class='list-group'>";
-
-                            for(var i=0; i<rows.length; i++){
-                                table_html_code += "<a href=\"#\" class=\"list-group-item list-group-item-action \">";
-                                table_html_code += rows[i].primary_title;
-                                table_html_code += "</a>";
+                            if(fields.type[0] === "Title"){
+                                table_html_code = title_table_html(rows);
+                            }else{
+                                table_html_code = people_table_html(rows);
                             }
-
-                            table_html_code += "</div>";
-*/
-
-                            var table_html_code =
-                                '<table class="table">' +
-                                    '<thead class="thead-dark">' +
-                                        '<tr>' +
-                                            '<th scope="col">Number</th>' +
-                                            '<th scope="col">Title</th>' +
-                                            '<th scope="col">Type</th>' +
-                                            '<th scope="col">Started Year</th>' +
-                                            '<th scope="col">Ended Year</th>' +
-                                        '</tr>' +
-                                    '</thead>' +
-                                    '<tbody>';
-
-                            for(var i=0; i<rows.length; i++){
-                                var end_year;
-                                if(rows[i].end_year === null){
-                                    end_year = '-';
-                                }else{
-                                    end_year = rows[i].end_year;
-                                }
-
-                                table_html_code += '<tr>' +
-                                    '<th scope="row">' + (i+1) + '</th>' +
-                                    '<td>' +
-                                    '<a href=\"#\" class=\"list-group-item-action \">' +
-                                    rows[i].primary_title + '</a>' + '</td>' +
-                                    '<td>' + rows[i].title_type +'</td>' +
-                                    '<td>' + rows[i].start_year +'</td>' +
-                                    '<td>' + end_year +'</td>' +
-                                    '</tr>';
-                            }
-
-                            table_html_code += "</tbody></table>";
 
                             res.writeHead(200, {'Content' : 'text/html'});
                             var html_code = data.toString('utf8');
@@ -174,19 +97,142 @@ app.post('/search', (req, res) => {
 
 });
 
-
-//var sql = "SELECT * FROM Titles WHERE primary_title LIKE '%spiderman%'; ";
-
-var hello = function(err, rows){
-    if(err){
-        console.log(err);
+app.get('/individual', (req, res) => {
+    var url_query = {};
+    if(req.query.tconst){
+        url_query.type = 'Titles';
+        url_query.param = 'tconst';
+        url_query.const = req.query.tconst;
     }else{
-        console.log(rows);
+        url_query.type = 'Names';
+        url_query.param = 'nconst';
+        url_query.const = req.query.nconst;
     }
 
-};
+    var sql = "SELECT * FROM " + url_query.type + " WHERE " + url_query.param + " = \"" + url_query.const + "\"";
 
-//console.log(db.all(sql,hello));
+    console.log(sql);
+
+    fs.readFile('public/results-template.html', (err, data) => {
+        if(err){
+            console.log(err);
+            res.writeHead(404, {'Content-Type': 'text/plain'});
+            res.write('Uh oh - could not find file. here');
+            res.end();
+        }else{
+            var db = new sqlite3.Database('../imdb.sqlite3');
+
+            db.all(sql, function(err,rows) {
+                if(err){
+                    console.log(err);
+                }else{
+                    var table_html_code = "";
+
+                    if(url_query.type === "Titles"){
+                        //need function
+                        table_html_code = "<p>Movie info</p>";
+                    }else{
+                        //need function
+                        table_html_code = "<p>Person info</p>";
+                    }
+
+                    res.writeHead(200, {'Content' : 'text/html'});
+                    var html_code = data.toString('utf8');
+                    html_code = html_code.replace('***TABLE***', table_html_code);
+                    res.write(html_code);
+                    res.end();
+
+                    db.close();
+                }
+            });
+        }
+    });
+
+});
+
+
+
+
+function title_table_html(sql_result) {
+    var table_html_code =
+        '<h2>Your Results: </h2>' +
+        '<table class="table">' +
+        '<thead class="thead-dark">' +
+        '<tr>' +
+        '<th scope="col">Number</th>' +
+        '<th scope="col">Title</th>' +
+        '<th scope="col">Type</th>' +
+        '<th scope="col">Started Year</th>' +
+        '<th scope="col">Ended Year</th>' +
+        '</tr>' +
+        '</thead>' +
+        '<tbody>';
+
+    for(var i=0; i<sql_result.length; i++){
+        var end_year;
+        if(sql_result[i].end_year === null){
+            end_year = '-';
+        }else{
+            end_year = sql_result[i].end_year;
+        }
+
+        table_html_code += '<tr>' +
+            '<th scope="row">' + (i+1) + '</th>' +
+            '<td>' +
+            '<a href=\"http://cisc-dean.stthomas.edu:8011/individual?tconst=' + sql_result[i].tconst + '\" class=\"list-group-item-action \">' +
+            sql_result[i].primary_title + '</a>' + '</td>' +
+            '<td>' + sql_result[i].title_type +'</td>' +
+            '<td>' + sql_result[i].start_year +'</td>' +
+            '<td>' + end_year +'</td>' +
+            '</tr>';
+    }
+
+    table_html_code += "</tbody></table>";
+
+    return table_html_code;
+}
+
+function people_table_html(sql_result){
+
+    var table_html_code =
+        '<h2>Your Results: </h2>' +
+        '<table class="table">' +
+        '<thead class="thead-dark">' +
+        '<tr>' +
+        '<th scope="col">Number</th>' +
+        '<th scope="col">Name</th>' +
+        '<th scope="col">Birth Year</th>' +
+        '<th scope="col">Death Year</th>' +
+        '<th scope="col">Profession</th>' +
+        '</tr>' +
+        '</thead>' +
+        '<tbody>';
+
+    for(var i=0; i<sql_result.length; i++){
+        var death_year;
+        if(sql_result[i].death_year === null){
+            death_year = 'present';
+        }else{
+            death_year = sql_result[i].death_year;
+        }
+
+        table_html_code += '<tr>' +
+            '<th scope="row">' + (i+1) + '</th>' +
+            '<td>' +
+            '<a href=\"http://cisc-dean.stthomas.edu:8011/individual?nconst='+ sql_result[i].nconst +'\" class=\"list-group-item-action \">' +
+            sql_result[i].primary_name + '</a>' + '</td>' +
+            '<td>' + sql_result[i].birth_year +'</td>' +
+            '<td>' + death_year +'</td>' +
+            '<td>' + sql_result[i].primary_profession +'</td>' +
+            '</tr>';
+    }
+
+    table_html_code += "</tbody></table>";
+
+    return table_html_code;
+
+
+}
 
 console.log("now listening at port: " + port);
 
