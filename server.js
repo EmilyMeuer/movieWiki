@@ -182,46 +182,6 @@ app.get('/individual', (req, res) => {
         sql = "SELECT Names.* FROM Names, Principals, "
     }
 
-/*
-    fs.readFile('public/results-template.html', (err, data) => {
-        if(err){
-            console.log(err);
-            res.writeHead(404, {'Content-Type': 'text/plain'});
-            res.write('Uh oh - could not find file. here');
-            res.end();
-        }else{
-            var db = new sqlite3.Database('../imdb.sqlite3');
-
-            db.all(sql, function(err,rows) {
-                if(err){
-                    console.log(err);
-                }else{
-
-                    console.log(rows);
-
-                    var table_html_code = "";
-
-                    if(url_query.type === "Titles"){
-                        //need function
-                        table_html_code = individual_movie_html(rows);
-                    }else{
-                        //need function
-                        table_html_code = individual_person_html(rows);
-                    }
-
-                    res.writeHead(200, {'Content' : 'text/html'});
-                    var html_code = data.toString('utf8');
-                    html_code = html_code.replace('***TABLE***', table_html_code);
-                    res.write(html_code);
-                    res.end();
-
-                    db.close();
-                }
-            });
-
-      }
-    });
-*/
 });
 
 function populate_people_list(sql_result_arr) {
@@ -243,7 +203,7 @@ function format_individual_movie(sql_result){
 
     var db = new sqlite3.Database('../imdb.sqlite3');
 
-    var html_code = "";
+    var html_code =  '<h2>'+ sql_result[0].primary_title +'</h2>' ;
 
     var end_year;
     if(sql_result.end_year === null){
@@ -273,9 +233,8 @@ function format_individual_movie(sql_result){
     }
 
     html_code += '<div class="row">' +
-                    '<div class="col-8">' +
+                    '<div class="col-3">' +
                         //movie info here
-                        '<h2>'+ sql_result[0].primary_title +'</h2>' +
                         '<p>Movie type: ' + sql_result[0].title_type +'</p>' +
                         '<p>Start year: ' + sql_result[0].start_year +'</p>' +
                         '<p>End year: ' + sql_result[0].end_year +'</p>' +
@@ -292,18 +251,18 @@ function format_individual_movie(sql_result){
             "\">" + sql_result[i].primary_name + "</a></li>";
     }
 
-    html_code += "</ol>";
+    html_code += "</ol></div>";
 
-    html_code += "<h5>Directors: ***directors***</h5>";
 
-    html_code += "<h5>Writers: ***writers***</h5>";
+    html_code += "<div class=\"col-3\"><h5>Directors: ***directors***</h5></div>";
 
-    html_code += '</div>' +
-                    '<div class="col-4">' +
-                        //movie picture here
-                    '***picture***' +
-                    '</div>' +
-                '</div>';
+    html_code += "<div class=\"col-3\"><h5>Writers: ***writers***</h5></div>";
+
+    html_code += '<div class="col-3">' +
+        //movie picture here
+        '***picture***' + '</div>'+
+
+        '</div>';
 
     returnObj.html_code = html_code;
     returnObj.directors_sql = directors_sql;
