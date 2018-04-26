@@ -179,7 +179,50 @@ app.get('/individual', (req, res) => {
             }
         });
     }else{
-        sql = "SELECT Names.* FROM Names, Principals, "
+        sql = "SELECT * FROM Names WHERE nconst = \"" + url_query.const + "\"";
+
+        fs.readFile("public/results-template.html", (err, data) => {
+           if(err){
+               console.log(err);
+               res.writeHead(404, {'Content-Type': 'text/plain'});
+               res.write('Uh oh - could not find file. here');
+               res.end();
+           } else{
+
+               var html_code = data.toString('utf8');
+               var db = new sqlite3.Database('../imdb.sqlite3');
+
+               db.all(sql, (err, rows) =>{
+                  if(err){
+                      console.log(err);
+                  }else{
+
+                      var first_query_obj = format_individual_person(rows[0]);
+
+                      html_table_code = first_query_obj.html_code;
+
+                      html_code = html_code.replace('***TABLE***', html_table_code);
+
+                      db.all(first_query_obj.titles_name_sql, (err, rows) => {
+                         if(err){
+                             console.log(err);
+                         } else{
+                             var title_list = populate_known_titles(rows);
+                             html_code = html_code.replace('***known_titles***', title_list);
+
+                             res.writeHead(200, {'Content' : 'text/html'});
+                             res.write(html_code);
+                             res.end();
+                             console.log("sent");
+                         }
+                      });
+
+                  }
+               });
+
+               db.close();
+           }
+        });
     }
 
 });
@@ -201,15 +244,13 @@ function populate_people_list(sql_result_arr) {
 function format_individual_movie(sql_result){
     var returnObj = {};
 
-    var db = new sqlite3.Database('../imdb.sqlite3');
-
     var html_code =  '<h2>'+ sql_result[0].primary_title +'</h2>' ;
 
     var end_year;
-    if(sql_result.end_year === null){
+    if(sql_result[0].end_year === null){
         end_year = '-';
     }else{
-        end_year = sql_result.end_year;
+        end_year = sql_result[0].end_year;
     }
 
     var directors_arr = sql_result[0].directors.split(',');
@@ -237,7 +278,7 @@ function format_individual_movie(sql_result){
                         //movie info here
                         '<p>Movie type: ' + sql_result[0].title_type +'</p>' +
                         '<p>Start year: ' + sql_result[0].start_year +'</p>' +
-                        '<p>End year: ' + sql_result[0].end_year +'</p>' +
+                        '<p>End year: ' + end_year +'</p>' +
                         '<p>Movie type: ' + sql_result[0].title_type +'</p>' +
                         '<p>Length: ' + sql_result[0].runtime_minutes +' minutes</p>' +
                         '<p>Genres: ' + sql_result[0].genres +'</p>' +
@@ -261,7 +302,6 @@ function format_individual_movie(sql_result){
     html_code += '<div class="col-3">' +
         //movie picture here
         '***picture***' + '</div>'+
-
         '</div>';
 
     returnObj.html_code = html_code;
@@ -270,21 +310,61 @@ function format_individual_movie(sql_result){
     return returnObj;
 }
 
-function individual_person_html(sql_result){
-    var html_code = "person here";
+function populate_known_titles(sql_result_arr){
+    var html_code = "<ul style='list-style-type: none'>";
+
+    for(var i=0;i<sql_result_arr.length;i++){
+        html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:8011/individual?tconst=" +
+            sql_result_arr[i].tconst + "\" >"
+            + sql_result_arr[i].primary_title + "</a></li>";
+    }
+
+    html_code += "</ul>";
+
+    return html_code;
+}
+
+function format_individual_person(sql_result){
+    var return_obj = {};
+
+    var html_code = "<h2>" + sql_result.primary_name + '</h2>';
+
+    var death_year;
+    if(sql_result.death_year === null){
+        death_year = 'present';
+    }else{
+        death_year = sql_result.death_year;
+    }
+
+    var known_titles_arr = sql_result.known_for_titles.split(',');
+    var titles_name_sql = "SELECT Titles.primary_title, Titles.tconst From Titles WHERE ";
+    for(var i=0; i<known_titles_arr.length; i++){
+        titles_name_sql += "tconst = \"" + known_titles_arr[i] + "\" ";
+
+        if(i<known_titles_arr.length-1) {
+            titles_name_sql += "OR ";
+        }
+    }
 
     html_code += '<div class="row">' +
-                    '<div class="col-8">' +
+                    '<div class="col-4">' +
                         // info here
-                        '' +
-                    '</div>' +
+                        '<p>Birth Year: ' + sql_result.birth_year +'</p>' +
+                        '<p>Death Year: ' + death_year +'</p>' +
+                        '<p>Professions: '+ sql_result.primary_profession +'</p>' +
+                    '</div><div class="col-4"><h5>Known For Titles</h5>' +
+                        '***known_titles***' +
+                    '</div> ' +
                     '<div class="col-4">' +
                         //movie picture here
-                        'pic here' +
+                        '***picture***' +
                     '</div>' +
                 '</div>';
 
-    return html_code;
+    return_obj.html_code = html_code;
+    return_obj.titles_name_sql = titles_name_sql;
+
+    return return_obj;
 }
 
 function title_table_html(sql_result) {
