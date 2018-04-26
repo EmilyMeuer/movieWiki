@@ -49,9 +49,11 @@ app.post('/search', (req, res) => {
             var sql = "";
 
             if(fields.type[0] === "Title"){
-                sql = "SELECT * FROM Titles WHERE primary_title LIKE '%" + fields.content[0] +"%'";
+                //sql = "SELECT * FROM Titles WHERE primary_title LIKE '%" + fields.content[0] +"%'";
+                sql = "SELECT * FROM Titles WHERE primary_title LIKE $searchTerm";
             }else{
-                sql = "SELECT * FROM Names WHERE primary_name LIKE '%" + fields.content[0] + "%'";
+                //sql = "SELECT * FROM Names WHERE primary_name LIKE '%" + fields.content[0] + "%'";
+                sql = "SELECT * FROM Names WHERE primary_name LIKE $searchTerm";
             }
 
             console.log(sql);
@@ -65,7 +67,13 @@ app.post('/search', (req, res) => {
                 }else{
                     var db = new sqlite3.Database('../imdb.sqlite3');
 
-                    db.all(sql, function (err, rows) {
+		// Removes all instances of '(', ')', and ';' characters:
+		    var searchTerm	= fields.content[0].replace(/(\(|\)|\;)/g, '');
+		// Relaces all instances of '*' with '%' so that it will act as a wildcard character:
+		    searchTerm		= '%' + searchTerm.replace(/\*/g, '%') + '%';
+                    db.all(sql, {
+			$searchTerm: searchTerm
+			}, function (err, rows) {
                         if(err){
                             console.log(err);
                         }else{
