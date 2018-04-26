@@ -11,8 +11,11 @@ var multiparty = require('multiparty');
 var mime = require('mime');
 var sqlite3 = require('sqlite3').verbose();
 
+// from Dr. Marrinan:
+var poster = require('./imdb_poster.js');
+
 var app = express();
-var port = 8011;
+var port = 8013;
 var public_dir = path.join(__dirname, 'public');
 
 
@@ -122,9 +125,9 @@ app.get('/individual', (req, res) => {
             "Ratings.average_rating, Ratings.num_votes, Names.primary_name, Crew.directors, Crew.writers " +
             "FROM Titles, Principals, Ratings, Names, Crew " +
             "WHERE Titles.tconst = Principals.tconst AND Principals.tconst = Ratings.tconst AND Titles.tconst = Crew.tconst " +
-            "AND Titles.tconst = \"" + url_query.const + "\"" +
-            "AND Principals.nconst = Names.nconst " +
-            "ORDER BY Principals.ordering;";
+            " AND Titles.tconst = \"" + url_query.const + "\"" +
+            " AND Principals.nconst = Names.nconst " +
+            " ORDER BY Principals.ordering;";
 
         fs.readFile('public/results-template.html', (err, data) =>{
             if(err){
@@ -137,13 +140,39 @@ app.get('/individual', (req, res) => {
 
                 var db = new sqlite3.Database('../imdb.sqlite3');
 
-                db.all(sql, function(err,rows){
+                var picturePromise      = new Promise((resolve, reject) => {
+                                poster.GetPosterFromTitleId(rows[0].tconst, (err, data) => {
+                                        if(err) {
+                                                resolve(err);
+                                        } else {
+                                                reject(data);
+                                        }
+                                });
+                        });
+		picturePromise.then( (data) => {
+			console.log(data);
+		}, (err) => {
+			console.log(err);
+		});
+
+		db.all(sql, function(err,rows){
                     if(err){
                         console.log(err);
                     }else{
                         var first_query_obj = format_individual_movie(rows);
-
-                        html_table_code = first_query_obj.html_code;
+			
+		/*	var picturePromise      = new Promise((resolve, reject) => {
+        	                poster.GetPosterFromTitleId(rows[0].tconst, (err, data) => {
+					if(err) {
+						console.log(err);
+					} else {
+						console.log(data);
+					}
+				});
+                	});
+*/
+                        
+			html_table_code = first_query_obj.html_code;
 
                         html_code = html_code.replace('***TABLE***', html_table_code);
 
@@ -158,7 +187,8 @@ app.get('/individual', (req, res) => {
                                     var writers_list = populate_people_list(rows);
                                     html_code = html_code.replace('***writers***', writers_list);
 
-                                    res.writeHead(200, {'Content' : 'text/html'});
+
+				    res.writeHead(200, {'Content' : 'text/html'});
                                     res.write(html_code);
                                     res.end();
                                     console.log("sent");
@@ -288,7 +318,7 @@ function format_individual_movie(sql_result){
     html_code += "<h5>Casting: </h5><ol>";
 
     for(var i=0; i<sql_result.length;i++){
-        html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:8011/individual?nconst= " + sql_result[i].nconst +
+        html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:8011/individual?nconst=" + sql_result[i].nconst +
             "\">" + sql_result[i].primary_name + "</a></li>";
     }
 
