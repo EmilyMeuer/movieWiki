@@ -87,8 +87,6 @@ app.post('/search', (req, res) => {
                         }
                     });
 
-
-
                 }
             });
         }
@@ -101,15 +99,28 @@ app.get('/individual', (req, res) => {
     var url_query = {};
     if(req.query.tconst){
         url_query.type = 'Titles';
-        url_query.param = 'tconst';
         url_query.const = req.query.tconst;
     }else{
         url_query.type = 'Names';
-        url_query.param = 'nconst';
         url_query.const = req.query.nconst;
     }
-
-    var sql = "SELECT * FROM " + url_query.type + " WHERE " + url_query.param + " = \"" + url_query.const + "\"";
+/*
+    var sql = "SELECT " + url_query.select +" FROM " + url_query.type + " WHERE Titles.tconst = Principals.tc Titles." +
+        url_query.param + " = \"" + url_query.const + "\"";
+*/
+    var sql = "";
+    if(url_query.type === 'Titles') {
+        sql = "SELECT DISTINCT Titles.tconst, Titles.primary_title, Titles.title_type, Titles.start_year, " +
+            "Titles.end_year, Titles.runtime_minutes, Titles.genres, Principals.ordering, Principals.nconst, " +
+            "Ratings.average_rating, Ratings.num_votes, Names.primary_name, Crew.directors, Crew.writers " +
+            "FROM Titles, Principals, Ratings, Names, Crew " +
+            "WHERE Titles.tconst = Principals.tconst AND Principals.tconst = Ratings.tconst AND Titles.tconst = Crew.tconst " +
+            "AND Titles.tconst = \"" + url_query.const + "\"" +
+            "AND Principals.nconst = Names.nconst " +
+            "ORDER BY Principals.ordering;";
+    }else{
+        sql = "SELECT Names.* FROM Names, Principals, "
+    }
 
     console.log(sql);
 
@@ -126,14 +137,17 @@ app.get('/individual', (req, res) => {
                 if(err){
                     console.log(err);
                 }else{
+
+                    console.log(rows);
+
                     var table_html_code = "";
 
                     if(url_query.type === "Titles"){
                         //need function
-                        table_html_code = individual_movie_html(rows[0]);
+                        table_html_code = individual_movie_html(rows);
                     }else{
                         //need function
-                        table_html_code = individual_person_html(rows[0]);
+                        table_html_code = individual_person_html(rows);
                     }
 
                     res.writeHead(200, {'Content' : 'text/html'});
@@ -145,38 +159,82 @@ app.get('/individual', (req, res) => {
                     db.close();
                 }
             });
+
         }
     });
 
 });
 
 function individual_movie_html(sql_result){
+
+    var db = new sqlite3.Database('../imdb.sqlite3');
+
     var html_code = "";
 
     console.log(sql_result);
-/*
+
+    var end_year;
+    if(sql_result.end_year === null){
+        end_year = '-';
+    }else{
+        end_year = sql_result.end_year;
+    }
+
+    var directors_arr = sql_result[0].directors.split(',');
+
+    console.log(directors_arr);
+
+    var writers_arr = sql_result[0].writers.split(',');
+
     html_code += '<div class="row">' +
                     '<div class="col-8">' +
                         //movie info here
-                        '<h2>'+ sql_result.primary_title +'</h2>' +
-                        '<p>Movie type: ' + sql_result.title_type +'</p>' +
-                        '<p>Start year: ' + sql_result.start_year +'</p>' +
-                        '<p>End year: ' + sql_result.end_year +'</p>' +
-                        '<p>Movie type: ' + sql_result.title_type +'</p>' +
-                    '</div>' +
+                        '<h2>'+ sql_result[0].primary_title +'</h2>' +
+                        '<p>Movie type: ' + sql_result[0].title_type +'</p>' +
+                        '<p>Start year: ' + sql_result[0].start_year +'</p>' +
+                        '<p>End year: ' + sql_result[0].end_year +'</p>' +
+                        '<p>Movie type: ' + sql_result[0].title_type +'</p>' +
+                        '<p>Length: ' + sql_result[0].runtime_minutes +' minutes</p>' +
+                        '<p>Genres: ' + sql_result[0].genres +'</p>' +
+                        '<p>Average rating: ' + sql_result[0].average_rating +'</p>' +
+                        '<p>Number of votes: ' + sql_result[0].num_votes +'</p>';
+
+    html_code += "<h5>Casting: </h5><ol>";
+
+    for(var i=0; i<sql_result.length;i++){
+        html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:8011/individual?nconst= " + sql_result[i].nconst +
+            "\">" + sql_result[i].primary_name + "</a></li>";
+    }
+
+    html_code += "</ol>";
+
+    html_code += "<h5>Directors: </h5><ol>";
+
+    for(var i=0; i<directors_arr.length; i++){
+        db.get("SELECT * FROM Names WHERE nconst = " + "\"" + directors_arr[i] + "\"", (err, rows) => {
+            if(err){
+                console.log(err);
+            }else{
+                console.log(rows.primary_name);
+                html_code += '<li>' + rows.primary_name + '</li>'
+            }
+        });
+    }
+
+    html_code += "</ol>";
+
+    html_code += '</div>' +
                     '<div class="col-4">' +
                         //movie picture here
-                    'pic here' +
+                    '***picture***' +
                     '</div>' +
                 '</div>';
-*/
 
     return html_code;
 }
 
 function individual_person_html(sql_result){
     var html_code = "person here";
-
 
     html_code += '<div class="row">' +
                     '<div class="col-8">' +
