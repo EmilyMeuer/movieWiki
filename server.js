@@ -27,7 +27,9 @@ app.get('/search', (req, res) => {
 
     console.log(query);
 
-    res.writeHead(404, {'Content-Type' : 'text/html'});
+    res.writeHead(404, {
+        'Content-Type': 'text/html'
+    });
     var resStr = 'Wrong action, please go back to home page.';
     resStr += '<br/><a href=\"/index.html\">home page</a>';
     res.write(resStr);
@@ -39,45 +41,46 @@ app.post('/search', (req, res) => {
     var form = new multiparty.Form();
     form.parse(req, (err, fields, files) => {
 
-        if(err){
-            res.writeHead(404, {'Content-Type' : 'text/plain'});
+        if (err) {
+            res.writeHead(404, {
+                'Content-Type': 'text/plain'
+            });
             var resStr = 'something wrong here, please go back to home page.';
             resStr += '<br/><a href="/index.html">home page</a>';
             res.write(resStr);
             res.end();
-        }else{
-            var sql = "";
-
-            if(fields.type[0] === "Title"){
-                sql = "SELECT * FROM Titles WHERE primary_title LIKE '%" + fields.content[0] +"%'";
-            }else{
-                sql = "SELECT * FROM Names WHERE primary_name LIKE '%" + fields.content[0] + "%'";
-            }
+        } else {
+            var sql = db.prepare("SELECT * FROM " + fields.type[0] + " WHERE primary_" + fields.type[0].toLowerCase().substring(0, fields.type[0].length - 1) + " LIKE (?)");
 
             console.log(sql);
+            // fields.content[0]
 
             fs.readFile('public/results-template.html', (err, data) => {
-                if(err){
+                if (err) {
                     console.log(err);
-                    res.writeHead(404, {'Content-Type': 'text/plain'});
+                    res.writeHead(404, {
+                        'Content-Type': 'text/plain'
+                    });
                     res.write('Uh oh - could not find file. here');
                     res.end();
-                }else{
+                } else {
                     var db = new sqlite3.Database('../imdb.sqlite3');
 
-                    db.all(sql, function (err, rows) {
-                        if(err){
+                    sql.run(function(err, row) {
+                        if (err) {
                             console.log(err);
-                        }else{
+                        } else {
                             var table_html_code = "";
 
-                            if(fields.type[0] === "Title"){
-                                table_html_code = title_table_html(rows);
-                            }else{
-                                table_html_code = people_table_html(rows);
+                            if (fields.type[0] === "Title") {
+                                table_html_code = title_table_html(row);
+                            } else {
+                                table_html_code = people_table_html(row);
                             }
 
-                            res.writeHead(200, {'Content' : 'text/html'});
+                            res.writeHead(200, {
+                                'Content': 'text/html'
+                            });
                             var html_code = data.toString('utf8');
                             html_code = html_code.replace('***TABLE***', table_html_code);
                             res.write(html_code);
@@ -85,13 +88,10 @@ app.post('/search', (req, res) => {
 
                             db.close();
                         }
-                    });
-
-
-
-                }
-            });
-        }
+                    }); // sql.run
+                } // else - no error
+            }); // readFile
+        } // else - no err
     });
 
 
@@ -99,44 +99,48 @@ app.post('/search', (req, res) => {
 
 app.get('/individual', (req, res) => {
     var url_query = {};
-    if(req.query.tconst){
+    if (req.query.tconst) {
         url_query.type = 'Titles';
         url_query.param = 'tconst';
         url_query.const = req.query.tconst;
-    }else{
+    } else {
         url_query.type = 'Names';
         url_query.param = 'nconst';
         url_query.const = req.query.nconst;
     }
 
-    var sql = "SELECT * FROM " + url_query.type + " WHERE " + url_query.param + " = \"" + url_query.const + "\"";
+    var sql = "SELECT * FROM " + url_query.type + " WHERE " + url_query.param + " = \"" + url_query.const+"\"";
 
     console.log(sql);
 
     fs.readFile('public/results-template.html', (err, data) => {
-        if(err){
+        if (err) {
             console.log(err);
-            res.writeHead(404, {'Content-Type': 'text/plain'});
+            res.writeHead(404, {
+                'Content-Type': 'text/plain'
+            });
             res.write('Uh oh - could not find file. here');
             res.end();
-        }else{
+        } else {
             var db = new sqlite3.Database('../imdb.sqlite3');
 
-            db.all(sql, function(err,rows) {
-                if(err){
+            db.all(sql, function(err, rows) {
+                if (err) {
                     console.log(err);
-                }else{
+                } else {
                     var table_html_code = "";
 
-                    if(url_query.type === "Titles"){
+                    if (url_query.type === "Titles") {
                         //need function
                         table_html_code = individual_movie_html(rows[0]);
-                    }else{
+                    } else {
                         //need function
                         table_html_code = individual_person_html(rows[0]);
                     }
 
-                    res.writeHead(200, {'Content' : 'text/html'});
+                    res.writeHead(200, {
+                        'Content': 'text/html'
+                    });
                     var html_code = data.toString('utf8');
                     html_code = html_code.replace('***TABLE***', table_html_code);
                     res.write(html_code);
@@ -150,44 +154,44 @@ app.get('/individual', (req, res) => {
 
 });
 
-function individual_movie_html(sql_result){
+function individual_movie_html(sql_result) {
     var html_code = "";
 
     console.log(sql_result);
-/*
-    html_code += '<div class="row">' +
-                    '<div class="col-8">' +
-                        //movie info here
-                        '<h2>'+ sql_result.primary_title +'</h2>' +
-                        '<p>Movie type: ' + sql_result.title_type +'</p>' +
-                        '<p>Start year: ' + sql_result.start_year +'</p>' +
-                        '<p>End year: ' + sql_result.end_year +'</p>' +
-                        '<p>Movie type: ' + sql_result.title_type +'</p>' +
-                    '</div>' +
-                    '<div class="col-4">' +
-                        //movie picture here
-                    'pic here' +
-                    '</div>' +
-                '</div>';
-*/
+    /*
+        html_code += '<div class="row">' +
+                        '<div class="col-8">' +
+                            //movie info here
+                            '<h2>'+ sql_result.primary_title +'</h2>' +
+                            '<p>Movie type: ' + sql_result.title_type +'</p>' +
+                            '<p>Start year: ' + sql_result.start_year +'</p>' +
+                            '<p>End year: ' + sql_result.end_year +'</p>' +
+                            '<p>Movie type: ' + sql_result.title_type +'</p>' +
+                        '</div>' +
+                        '<div class="col-4">' +
+                            //movie picture here
+                        'pic here' +
+                        '</div>' +
+                    '</div>';
+    */
 
     return html_code;
 }
 
-function individual_person_html(sql_result){
+function individual_person_html(sql_result) {
     var html_code = "person here";
 
 
     html_code += '<div class="row">' +
-                    '<div class="col-8">' +
-                        // info here
-                        '' +
-                    '</div>' +
-                    '<div class="col-4">' +
-                        //movie picture here
-                        'pic here' +
-                    '</div>' +
-                '</div>';
+        '<div class="col-8">' +
+        // info here
+        '' +
+        '</div>' +
+        '<div class="col-4">' +
+        //movie picture here
+        'pic here' +
+        '</div>' +
+        '</div>';
 
     return html_code;
 }
@@ -207,22 +211,22 @@ function title_table_html(sql_result) {
         '</thead>' +
         '<tbody>';
 
-    for(var i=0; i<sql_result.length; i++){
+    for (var i = 0; i < sql_result.length; i++) {
         var end_year;
-        if(sql_result[i].end_year === null){
+        if (sql_result[i].end_year === null) {
             end_year = '-';
-        }else{
+        } else {
             end_year = sql_result[i].end_year;
         }
 
         table_html_code += '<tr>' +
-            '<th scope="row">' + (i+1) + '</th>' +
+            '<th scope="row">' + (i + 1) + '</th>' +
             '<td>' +
             '<a href=\"http://cisc-dean.stthomas.edu:8011/individual?tconst=' + sql_result[i].tconst + '\" class=\"list-group-item-action \">' +
             sql_result[i].primary_title + '</a>' + '</td>' +
-            '<td>' + sql_result[i].title_type +'</td>' +
-            '<td>' + sql_result[i].start_year +'</td>' +
-            '<td>' + end_year +'</td>' +
+            '<td>' + sql_result[i].title_type + '</td>' +
+            '<td>' + sql_result[i].start_year + '</td>' +
+            '<td>' + end_year + '</td>' +
             '</tr>';
     }
 
@@ -231,7 +235,7 @@ function title_table_html(sql_result) {
     return table_html_code;
 }
 
-function people_table_html(sql_result){
+function people_table_html(sql_result) {
 
     var table_html_code =
         '<h2>Your Results: </h2>' +
@@ -247,22 +251,22 @@ function people_table_html(sql_result){
         '</thead>' +
         '<tbody>';
 
-    for(var i=0; i<sql_result.length; i++){
+    for (var i = 0; i < sql_result.length; i++) {
         var death_year;
-        if(sql_result[i].death_year === null){
+        if (sql_result[i].death_year === null) {
             death_year = 'present';
-        }else{
+        } else {
             death_year = sql_result[i].death_year;
         }
 
         table_html_code += '<tr>' +
-            '<th scope="row">' + (i+1) + '</th>' +
+            '<th scope="row">' + (i + 1) + '</th>' +
             '<td>' +
-            '<a href=\"http://cisc-dean.stthomas.edu:8011/individual?nconst='+ sql_result[i].nconst +'\" class=\"list-group-item-action \">' +
+            '<a href=\"http://cisc-dean.stthomas.edu:8011/individual?nconst=' + sql_result[i].nconst + '\" class=\"list-group-item-action \">' +
             sql_result[i].primary_name + '</a>' + '</td>' +
-            '<td>' + sql_result[i].birth_year +'</td>' +
-            '<td>' + death_year +'</td>' +
-            '<td>' + sql_result[i].primary_profession +'</td>' +
+            '<td>' + sql_result[i].birth_year + '</td>' +
+            '<td>' + death_year + '</td>' +
+            '<td>' + sql_result[i].primary_profession + '</td>' +
             '</tr>';
     }
 
