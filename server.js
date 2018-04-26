@@ -441,8 +441,8 @@ function format_individual_person(sql_result){
                     '<div class="col-4">' +
                         // info here
                         '<p id="nconst_hidden" hidden>' + sql_result.nconst+ '</p>' +
-                        '<p>Birth Year: ' + sql_result.birth_year +'</p>' +
-                        '<p>Death Year: ' + death_year +'</p>' +
+                        '<p>Birth Year: ' +'<span id="person_birth_year">'+sql_result.birth_year +'</span></p>' +
+                        '<p>Death Year: ' +'<span id="person_death_year">'+death_year +'</span></p>' +
                         '<p>Professions: '+ sql_result.primary_profession +'</p>' +
                     '</div><div class="col-4"><h5>Known For Titles</h5>' +
                         '***known_titles***' +
@@ -527,8 +527,8 @@ function people_table_html(sql_result){
             '<td>' +
             '<a href=\"http://cisc-dean.stthomas.edu:'+ port +'/individual?nconst='+ sql_result[i].nconst +'\" class=\"list-group-item-action \">' +
             sql_result[i].primary_name + '</a>' + '</td>' +
-            '<td id="person_birth_year">' + sql_result[i].birth_year +'</td>' +
-            '<td id="person_death_year">' + death_year +'</td>' +
+            '<td>' + sql_result[i].birth_year +'</td>' +
+            '<td>' + death_year +'</td>' +
             '<td>' + sql_result[i].primary_profession +'</td>' +
             '</tr>';
     }

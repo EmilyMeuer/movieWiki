@@ -95,7 +95,19 @@ function editing_person(){
     console.log(person_birth_year);
     console.log(person_death_year);
 
+    var replace_element = "" +
+        "<form>" +
+            "<h4>Birth Year: (please enter number for years or \"present\")</h4>" +
+            "<input type='text' name='birth_year' placeholder='"+ person_birth_year +"'>" +
+            "<h4>Death Year: (please enter number for years or \"present\")</h4>" +
+            "<input type='text' name='death_year' placeholder='"+ person_death_year +"'>" +
+        "" +
+        "" +
+        "</form>";
 
+    $(document).ready(function () {
+        $('#table').replaceWith(replace_element);
+    });
 }
 
 function default_type(type, default_type){
