@@ -65,6 +65,42 @@ app.get('/search', (req, res) => {
     console.log('sent');
 });
 
+app.post('/updateMovie', (req, res) => {
+    var form = new multiparty.Form();
+
+    form.parse(req, (err, fields, files) => {
+        if(err){
+            res.writeHead(404, {'Content-Type' : 'text/plain'});
+            var resStr = 'something wrong here, please go back to home page.';
+            resStr += '<br/><a href="/index.html">home page</a>';
+            res.write(resStr);
+            res.end();
+        }else{
+            //console.log(fields);
+
+            var title_tconst = fields.tconst[0];
+            var title_type = fields.type[0];
+            var title_genres = fields.genres.toString();
+
+            var update_spl = "UPDATE Titles Set title_type=\'" + title_type + "\', genres=\'" +title_genres + "\' WHERE tconst=\'" +title_tconst + "\'";
+
+            var db = new sqlite3.Database('../imdb.sqlite3');
+
+            db.all(update_spl, (err, rows) =>{
+                if(err){
+                    console.log(err);
+                }else{
+                    res.writeHead(200, {'Content' : 'text/html'});
+                    res.write("<p>Successfully Updated. <a href=\'http://cisc-dean.stthomas.edu:8011/individual?tconst=" + title_tconst + "\'>Go Back to the title page</a></p>");
+                    res.end();
+                }
+            });
+
+            db.close();
+        }
+    })
+});
+
 //testing the POST method with /search
 app.post('/search', (req, res) => {
     var form = new multiparty.Form();
@@ -307,6 +343,7 @@ function format_individual_movie(sql_result){
 
     html_code += '<div class="row">' +
                     '<div class="col-3">' +
+                        '<p id="tconst_hidden" hidden>'+ sql_result[0].tconst +'</p>' +
                         //movie info here
                         '<p>Movie type: <span id="movie_type">' + sql_result[0].title_type +'</p>' +
                         '<p>Start year: ' + sql_result[0].start_year +'</p>' +

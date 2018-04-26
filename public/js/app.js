@@ -2,12 +2,15 @@ function editing_movie() {
     
     var movie_type = $('#movie_type')[0].innerHTML;
     var movie_genres = $('#movie_genres')[0].innerHTML;
+    var movie_tconst = $('#tconst_hidden')[0].innerHTML;
     //var cast_list = $('#cast_list')[0].innerHTML;
+
 
     var genres_arr = movie_genres.split(',');
 
     var replace_element = "" +
-        "<form class='row'>" +
+        "<form class='row' action=\"/updateMovie\" enctype=\"multipart/form-data\" method=\"POST\">" +
+            "<input hidden name='tconst' value=\'"+ movie_tconst +"\'>" +
             "<div class='col-4' >"+
                 "<h3>Movie Type</h3>" +
                 "<input type=\"radio\" name=\"type\" value=\"short\" "+ default_type('short', movie_type) +"> short<br>\n" +
@@ -54,8 +57,16 @@ function editing_movie() {
             "</div>" +
 
 
+            "<div class='col-3'>" +
+                "<h3>Reorder top billed cast</h3>" +
 
+            "</div> " +
 
+            "<div class='col-1'>" +
+                "<input type='submit' class=\"btn btn-primary col-12\" value='update'><br/>" +
+                "<input type='reset' class=\"btn btn-danger col-12\" value='reset'><br/>" +
+                "<a href=\"http://cisc-dean.stthomas.edu:8011/individual?tconst=" + movie_tconst + "\" class=\"btn btn-dark col-12\" onclick=''>back</a>  " +
+            "</div> " +
 
         "</form>" +
         "<script>" +
