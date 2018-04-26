@@ -94,7 +94,7 @@ app.post('/updateMovie', (req, res) => {
                     console.log(err);
                 }else{
                     res.writeHead(200, {'Content' : 'text/html'});
-                    res.write("<p>Successfully Updated. <a href=\'http://cisc-dean.stthomas.edu:8011/individual?tconst=" + title_tconst + "\'>Go Back to the title page</a></p>");
+                    res.write("<p>Successfully Updated. <a href=\'http://cisc-dean.stthomas.edu:" + port + "/individual?tconst=" + title_tconst + "\'>Go Back to the title page</a></p>");
                     res.end();
                 }
             });
@@ -332,7 +332,7 @@ function populate_people_list(sql_result_arr) {
     var html_code = "<ul style='list-style-type: none'>";
 
     for(var i=0;i<sql_result_arr.length;i++){
-        html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:8011/individual?nconst=" +
+        html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:" + port + "/individual?nconst=" +
             sql_result_arr[i].nconst + "\" >"
             + sql_result_arr[i].primary_name + "</a></li>";
     }
@@ -498,7 +498,7 @@ function title_table_html(sql_result) {
         table_html_code += '<tr>' +
             '<th scope="row">' + (i+1) + '</th>' +
             '<td>' +
-            '<a href=\"http://cisc-dean.stthomas.edu:"+ port +"/individual?tconst=' + sql_result[i].tconst + '\" class=\"list-group-item-action \">' +
+            '<a href=\"http://cisc-dean.stthomas.edu:'+ port + '/individual?tconst=' + sql_result[i].tconst + '\" class=\"list-group-item-action \">' +
             sql_result[i].primary_title + '</a>' + '</td>' +
             '<td>' + sql_result[i].title_type +'</td>' +
             '<td>' + sql_result[i].start_year +'</td>' +
@@ -538,7 +538,7 @@ function people_table_html(sql_result){
         table_html_code += '<tr>' +
             '<th scope="row">' + (i+1) + '</th>' +
             '<td>' +
-            '<a href=\"http://cisc-dean.stthomas.edu:"+ port +"/individual?nconst='+ sql_result[i].nconst +'\" class=\"list-group-item-action \">' +
+            '<a href=\"http://cisc-dean.stthomas.edu:' + port +'/individual?nconst='+ sql_result[i].nconst +'\" class=\"list-group-item-action \">' +
             sql_result[i].primary_name + '</a>' + '</td>' +
             '<td>' + sql_result[i].birth_year +'</td>' +
             '<td>' + death_year +'</td>' +
