@@ -20,18 +20,49 @@ var server = http.createServer(app);
 //serve all files in public directory
 app.use(express.static(public_dir));
 
+app.get('/index.html', (req, res) => {
+    fs.readFile('public/index.html', (err,data) => {
+        if(err){
+            console.log(err);
+            res.writeHead(404, {'Content-Type': 'text/plain'});
+            res.write('Uh oh - could not find file. here');
+            res.end();
+        }else{
+            res.writeHead(200, {'Content' : 'text/html'});
+            var html_code = data.toString('utf8');
+            res.write(html_code);
+            res.end();
+            console.log('sent');
+        }
+    })
+});
+
 //GET method with /search users should not do it this way give error
 app.get('/search', (req, res) => {
     var req_url = url.parse(req.url);
     var query = querystring.parse(req_url.query);
 
-    console.log(query);
+    var sql = "SELECT DISTINCT genres FROM Titles";
+    var db = new sqlite3.Database('../imdb.sqlite3');
+
+    db.all(sql, (err, rows) =>{
+        if(err){
+            console.log(err);
+        }else{
+            console.log(rows);
+        }
+
+    });
+
+    db.close();
+
 
     res.writeHead(404, {'Content-Type' : 'text/html'});
     var resStr = 'Wrong action, please go back to home page.';
     resStr += '<br/><a href=\"/index.html\">home page</a>';
     res.write(resStr);
     res.end();
+    console.log('sent');
 });
 
 //testing the POST method with /search
@@ -244,7 +275,8 @@ function populate_people_list(sql_result_arr) {
 function format_individual_movie(sql_result){
     var returnObj = {};
 
-    var html_code =  '<h2>'+ sql_result[0].primary_title +'</h2>' ;
+    var html_code =  '<h2>'+ sql_result[0].primary_title +'' +
+        '<span onclick="editing_movie()">&nbsp;&nbsp;&nbsp;&nbsp;edit</span></h2>' ;
 
     var end_year;
     if(sql_result[0].end_year === null){
@@ -276,16 +308,15 @@ function format_individual_movie(sql_result){
     html_code += '<div class="row">' +
                     '<div class="col-3">' +
                         //movie info here
-                        '<p>Movie type: ' + sql_result[0].title_type +'</p>' +
+                        '<p>Movie type: <span id="movie_type">' + sql_result[0].title_type +'</p>' +
                         '<p>Start year: ' + sql_result[0].start_year +'</p>' +
                         '<p>End year: ' + end_year +'</p>' +
-                        '<p>Movie type: ' + sql_result[0].title_type +'</p>' +
                         '<p>Length: ' + sql_result[0].runtime_minutes +' minutes</p>' +
-                        '<p>Genres: ' + sql_result[0].genres +'</p>' +
+                        '<p>Genres: <span id="movie_genres">' + sql_result[0].genres +'</span></p>' +
                         '<p>Average rating: ' + sql_result[0].average_rating +'</p>' +
                         '<p>Number of votes: ' + sql_result[0].num_votes +'</p>';
 
-    html_code += "<h5>Casting: </h5><ol>";
+    html_code += "<h5>Casting (order by top billed cast): </h5><ol id='cast_list'>";
 
     for(var i=0; i<sql_result.length;i++){
         html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:8011/individual?nconst= " + sql_result[i].nconst +
