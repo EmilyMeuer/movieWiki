@@ -101,6 +101,10 @@ app.post('/updateMovie', (req, res) => {
     })
 });
 
+app.post('/updatePerson', (req, res) => {
+
+});
+
 //testing the POST method with /search
 app.post('/search', (req, res) => {
     var form = new multiparty.Form();
@@ -356,7 +360,7 @@ function format_individual_movie(sql_result){
     html_code += "<h5>Casting (order by top billed cast): </h5><ol id='cast_list'>";
 
     for(var i=0; i<sql_result.length;i++){
-        html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:8011/individual?nconst= " + sql_result[i].nconst +
+        html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:"+ port +"/individual?nconst=" + sql_result[i].nconst +
             "\">" + sql_result[i].primary_name + "</a></li>";
     }
 
@@ -375,6 +379,7 @@ function format_individual_movie(sql_result){
     returnObj.html_code = html_code;
     returnObj.directors_sql = directors_sql;
     returnObj.writers_sql = writers_sql;
+
     return returnObj;
 }
 
@@ -382,7 +387,7 @@ function populate_known_titles(sql_result_arr){
     var html_code = "<ul style='list-style-type: none'>";
 
     for(var i=0;i<sql_result_arr.length;i++){
-        html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:8011/individual?tconst=" +
+        html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:"+ port +"/individual?tconst=" +
             sql_result_arr[i].tconst + "\" >"
             + sql_result_arr[i].primary_title + "</a></li>";
     }
@@ -395,7 +400,8 @@ function populate_known_titles(sql_result_arr){
 function format_individual_person(sql_result){
     var return_obj = {};
 
-    var html_code = "<h2>" + sql_result.primary_name + '</h2>';
+    var html_code = "<h2>" + sql_result.primary_name + '' +
+        '<span onclick="editing_person()">&nbsp;&nbsp;&nbsp;&nbsp;edit</span></h2>';
 
     var death_year;
     if(sql_result.death_year === null){
@@ -417,6 +423,7 @@ function format_individual_person(sql_result){
     html_code += '<div class="row">' +
                     '<div class="col-4">' +
                         // info here
+                        '<p id="nconst_hidden" hidden>' + sql_result.nconst+ '</p>' +
                         '<p>Birth Year: ' + sql_result.birth_year +'</p>' +
                         '<p>Death Year: ' + death_year +'</p>' +
                         '<p>Professions: '+ sql_result.primary_profession +'</p>' +
@@ -461,7 +468,7 @@ function title_table_html(sql_result) {
         table_html_code += '<tr>' +
             '<th scope="row">' + (i+1) + '</th>' +
             '<td>' +
-            '<a href=\"http://cisc-dean.stthomas.edu:8011/individual?tconst=' + sql_result[i].tconst + '\" class=\"list-group-item-action \">' +
+            '<a href=\"http://cisc-dean.stthomas.edu:"+ port +"/individual?tconst=' + sql_result[i].tconst + '\" class=\"list-group-item-action \">' +
             sql_result[i].primary_title + '</a>' + '</td>' +
             '<td>' + sql_result[i].title_type +'</td>' +
             '<td>' + sql_result[i].start_year +'</td>' +
@@ -501,7 +508,7 @@ function people_table_html(sql_result){
         table_html_code += '<tr>' +
             '<th scope="row">' + (i+1) + '</th>' +
             '<td>' +
-            '<a href=\"http://cisc-dean.stthomas.edu:8011/individual?nconst='+ sql_result[i].nconst +'\" class=\"list-group-item-action \">' +
+            '<a href=\"http://cisc-dean.stthomas.edu:"+ port +"/individual?nconst='+ sql_result[i].nconst +'\" class=\"list-group-item-action \">' +
             sql_result[i].primary_name + '</a>' + '</td>' +
             '<td>' + sql_result[i].birth_year +'</td>' +
             '<td>' + death_year +'</td>' +

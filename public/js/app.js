@@ -1,3 +1,5 @@
+var port = 8011;
+
 function editing_movie() {
     
     var movie_type = $('#movie_type')[0].innerHTML;
@@ -65,7 +67,7 @@ function editing_movie() {
             "<div class='col-1'>" +
                 "<input type='submit' class=\"btn btn-primary col-12\" value='update'><br/>" +
                 "<input type='reset' class=\"btn btn-danger col-12\" value='reset'><br/>" +
-                "<a href=\"http://cisc-dean.stthomas.edu:8011/individual?tconst=" + movie_tconst + "\" class=\"btn btn-dark col-12\" onclick=''>back</a>  " +
+                "<a href=\"http://cisc-dean.stthomas.edu:"+ port +"/individual?tconst=" + movie_tconst + "\" class=\"btn btn-dark col-12\" onclick=''>back</a>  " +
             "</div> " +
 
         "</form>" +
@@ -82,6 +84,12 @@ function editing_movie() {
         $('#table').replaceWith(replace_element);
     });
 
+}
+
+function editing_person(){
+    var person_nconst = $('#nconst_hidden')[0].innerHTML;
+
+    console.log(person_nconst);
 }
 
 function default_type(type, default_type){
