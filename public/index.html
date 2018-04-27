@@ -1,43 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MovieWiki</title>
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>MovieWiki</title>
+    <link href="css/bootstrap.min.css" type="text/css" rel="stylesheet">
+    <link href="css/style.css" type="text/css" rel="stylesheet">
+</head>
+<body>
 
-        <link href="css/bootstrap.min.css" type="text/css" rel="stylesheet">
-        <link href="css/style.css" type="text/css" rel="stylesheet">
-    </head>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-warning">
+        <a class="navbar-brand" href="index.html">Movie Wiki</a>
 
-    <body>
-
-        <div class="container">
-
-            <form class="row" id="myForm" action="/search" enctype="multipart/form-data" method="POST">
-                <div class="col-2">
-                    <select class="form-control" name="type">
-                    <option selected>Titles</option>
-                    <option>Names</option>
-                </select>
-                </div>
-
-                <div class="col-8">
-                    <input type="text" class="form-control" name="content">
-                </div>
-
-                <div class="col-2">
-                    <input class="form-control" type="submit" value="Submit">
-                </div>
-            </form>
-
-
+        <div>
+            <div class="navbar-nav">
+                <a class="nav-item nav-link active" href="#">About Us</a>
+            </div>
         </div>
+    </nav>
 
-        <script src="js/popper.min.js"></script>
-        <script src="js/jquery.min.js"></script>
-        <script src="js/bootstrap.bundle.min.js"></script>
-        <script src="js/angular.js"></script>
-    </body>
+    <div class="container">
 
+        <form class="row" id="myForm" action="/search" enctype="multipart/form-data" method="POST">
+            <div class="col-2">
+                <select class="form-control" name="type">
+                    <option selected>Title</option>
+                    <option>People</option>
+                </select>
+            </div>
+
+            <div class="col-8">
+                <input type="text" class="form-control" name="content">
+            </div>
+
+            <div class="col-2">
+                <input class="form-control" type="submit" value="Submit">
+            </div>
+        </form>
+
+
+    </div>
+
+    <script src="js/popper.min.js"></script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/angular.js"></script>
+</body>
 </html>
