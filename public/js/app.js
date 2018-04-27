@@ -88,8 +88,14 @@ function editing_movie() {
 
 function editing_person(){
     var person_nconst = $('#nconst_hidden')[0].innerHTML;
+    var person_birth_year = $('#person_birth_year')[0].innerHTML;
+    var person_death_year = $('#person_death_year')[0].innerHTML;
 
     console.log(person_nconst);
+    console.log(person_birth_year);
+    console.log(person_death_year);
+
+
 }
 
 function default_type(type, default_type){

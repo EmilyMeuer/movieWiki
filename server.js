@@ -211,37 +211,41 @@ app.get('/individual', (req, res) => {
 
                 var db = new sqlite3.Database('../imdb.sqlite3');
 
-                var picturePromise      = new Promise((resolve, reject) => {
-                                poster.GetPosterFromTitleId(rows[0].tconst, (err, data) => {
-                                        if(err) {
-                                                resolve(err);
-                                        } else {
-                                                reject(data);
-                                        }
-                                });
-                        });
-		picturePromise.then( (data) => {
+/*		picturePromise.then( (data) => {
 			console.log(data);
 		}, (err) => {
 			console.log(err);
 		});
-
+*/
 		db.all(sql, function(err,rows){
                     if(err){
                         console.log(err);
                     }else{
                         var first_query_obj = format_individual_movie(rows);
 			
-		/*	var picturePromise      = new Promise((resolve, reject) => {
+			var picturePromise      = new Promise((resolve, reject) => {
         	                poster.GetPosterFromTitleId(rows[0].tconst, (err, data) => {
 					if(err) {
-						console.log(err);
+						console.log("Promise error");
+						reject(err);
 					} else {
-						console.log(data);
+						resolve(data);
 					}
 				});
                 	});
-*/
+
+			picturePromise.then((data) => {
+				console.log(data);
+				var src	= path.join(data.host, data.path);
+				console.log("path = " + src);
+
+				html_code	= html_code.replace('***picture***', '<img src=' + src + '>');
+				res.writeHead(200, {'Content': 'text/html'});
+                                res.write(html_code);
+                                res.end();
+			}, (err) => {
+				console.log(err);
+			});
                         
 			html_table_code = first_query_obj.html_code;
 
@@ -254,16 +258,26 @@ app.get('/individual', (req, res) => {
                                 var directors_list = populate_people_list(rows);
                                 html_code = html_code.replace('***directors***', directors_list);
 
-                                db.all(first_query_obj.writers_sql, function (err, rows) {
+                                if(first_query_obj.writers_sql !== "") {
+
+                                    db.all(first_query_obj.writers_sql, function (err, rows) {
+                                        var writers_list = populate_people_list(rows);
+                                        html_code = html_code.replace('***writers***', writers_list);
+
+                                        res.writeHead(200, {'Content': 'text/html'});
+                                        res.write(html_code);
+                                        res.end();
+                                        console.log("sent");
+                                    });
+                                }else{
                                     var writers_list = populate_people_list(rows);
-                                    html_code = html_code.replace('***writers***', writers_list);
+                                    html_code = html_code.replace('***writers***', "");
 
-
-				    res.writeHead(200, {'Content' : 'text/html'});
+                                    res.writeHead(200, {'Content': 'text/html'});
                                     res.write(html_code);
                                     res.end();
                                     console.log("sent");
-                                });
+                                }
 
                             }
                         });
@@ -365,50 +379,56 @@ function format_individual_movie(sql_result){
         }
     }
 
-    var writers_arr = sql_result[0].writers.split(',');
-    var writers_sql = "SELECT primary_name, nconst FROM Names WHERE ";
-    for(var i=0; i<writers_arr.length; i++){
-        writers_sql += "nconst = \"" + writers_arr[i] + "\" ";
+    if(sql_result[0].writers !== null) {
 
-        if(i<writers_arr.length-1){
-            writers_sql += "OR ";
+        var writers_arr = sql_result[0].writers.split(',');
+        var writers_sql = "SELECT primary_name, nconst FROM Names WHERE ";
+        for (var i = 0; i < writers_arr.length; i++) {
+            writers_sql += "nconst = \"" + writers_arr[i] + "\" ";
+
+            if (i < writers_arr.length - 1) {
+                writers_sql += "OR ";
+            }
         }
+    }else{
+        var writers_sql = "";
     }
 
-    html_code += '<div class="row">' +
-                    '<div class="col-3">' +
-                        '<p id="tconst_hidden" hidden>'+ sql_result[0].tconst +'</p>' +
-                        //movie info here
-                        '<p>Movie type: <span id="movie_type">' + sql_result[0].title_type +'</p>' +
-                        '<p>Start year: ' + sql_result[0].start_year +'</p>' +
-                        '<p>End year: ' + end_year +'</p>' +
-                        '<p>Length: ' + sql_result[0].runtime_minutes +' minutes</p>' +
-                        '<p>Genres: <span id="movie_genres">' + sql_result[0].genres +'</span></p>' +
-                        '<p>Average rating: ' + sql_result[0].average_rating +'</p>' +
-                        '<p>Number of votes: ' + sql_result[0].num_votes +'</p>';
+        html_code += '<div class="row">' +
+            '<div class="col-3">' +
+            '<p id="tconst_hidden" hidden>' + sql_result[0].tconst + '</p>' +
+            //movie info here
+            '<p>Movie type: <span id="movie_type">' + sql_result[0].title_type + '</p>' +
+            '<p>Start year: ' + sql_result[0].start_year + '</p>' +
+            '<p>End year: ' + end_year + '</p>' +
+            '<p>Length: ' + sql_result[0].runtime_minutes + ' minutes</p>' +
+            '<p>Genres: <span id="movie_genres">' + sql_result[0].genres + '</span></p>' +
+            '<p>Average rating: ' + sql_result[0].average_rating + '</p>' +
+            '<p>Number of votes: ' + sql_result[0].num_votes + '</p>';
 
-    html_code += "<h5>Casting (order by top billed cast): </h5><ol id='cast_list'>";
+        html_code += "<h5>Casting (order by top billed cast): </h5><ol id='cast_list'>";
 
-    for(var i=0; i<sql_result.length;i++){
-        html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:"+ port +"/individual?nconst=" + sql_result[i].nconst +
-            "\">" + sql_result[i].primary_name + "</a></li>";
-    }
+        for (var i = 0; i < sql_result.length; i++) {
+            html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:" + port + "/individual?nconst=" + sql_result[i].nconst +
+                "\">" + sql_result[i].primary_name + "</a></li>";
+        }
 
-    html_code += "</ol></div>";
+        html_code += "</ol></div>";
 
 
-    html_code += "<div class=\"col-3\"><h5>Directors: ***directors***</h5></div>";
+        html_code += "<div class=\"col-3\"><h5>Directors: ***directors***</h5></div>";
 
-    html_code += "<div class=\"col-3\"><h5>Writers: ***writers***</h5></div>";
+        html_code += "<div class=\"col-3\"><h5>Writers: ***writers***</h5></div>";
 
-    html_code += '<div class="col-3">' +
-        //movie picture here
-        '***picture***' + '</div>'+
-        '</div>';
+        html_code += '<div class="col-3">' +
+            //movie picture here
+            '***picture***' + '</div>' +
+            '</div>';
 
-    returnObj.html_code = html_code;
-    returnObj.directors_sql = directors_sql;
-    returnObj.writers_sql = writers_sql;
+        returnObj.html_code = html_code;
+        returnObj.directors_sql = directors_sql;
+        returnObj.writers_sql = writers_sql;
+
 
     return returnObj;
 }
@@ -498,8 +518,9 @@ function title_table_html(sql_result) {
         table_html_code += '<tr>' +
             '<th scope="row">' + (i+1) + '</th>' +
             '<td>' +
-            '<a href=\"http://cisc-dean.stthomas.edu:'+ port + '/individual?tconst=' + sql_result[i].tconst + '\" class=\"list-group-item-action \">' +
-            sql_result[i].primary_title + '</a>' + '</td>' +
+            '<a href=\"http://cisc-dean.stthomas.edu:'+ port +'/individual?tconst=' + sql_result[i].tconst + '\" class=\"list-group-item-action \">' +
+            
+	    sql_result[i].primary_title + '</a>' + '</td>' +
             '<td>' + sql_result[i].title_type +'</td>' +
             '<td>' + sql_result[i].start_year +'</td>' +
             '<td>' + end_year +'</td>' +
@@ -539,9 +560,10 @@ function people_table_html(sql_result){
             '<th scope="row">' + (i+1) + '</th>' +
             '<td>' +
             '<a href=\"http://cisc-dean.stthomas.edu:' + port +'/individual?nconst='+ sql_result[i].nconst +'\" class=\"list-group-item-action \">' +
-            sql_result[i].primary_name + '</a>' + '</td>' +
-            '<td>' + sql_result[i].birth_year +'</td>' +
-            '<td>' + death_year +'</td>' +
+            
+	    sql_result[i].primary_name + '</a>' + '</td>' +
+            '<td id="person_birth_year">' + sql_result[i].birth_year +'</td>' +
+            '<td id="person_death_year">' + death_year +'</td>' +
             '<td>' + sql_result[i].primary_profession +'</td>' +
             '</tr>';
     }
