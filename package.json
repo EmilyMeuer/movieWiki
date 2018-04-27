@@ -9,7 +9,7 @@
   "main": "server.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tmarrinan/node-webserver.git"
+    "url": "https://github.com/EmilyMeuer/movieWiki.git"
   },
   "dependencies": {
     "multiparty": "latest",
