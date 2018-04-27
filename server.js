@@ -45,14 +45,15 @@ app.get('/search', (req, res) => {
     var req_url = url.parse(req.url);
     var query = querystring.parse(req_url.query);
 
-    var sql = "SELECT DISTINCT genres FROM Titles";
+
+    var sql = "SELECT * FROM Names WHERE nconst=\'nm1727304\'";
     var db = new sqlite3.Database('../imdb.sqlite3');
 
     db.all(sql, (err, rows) =>{
         if(err){
             console.log(err);
         }else{
-            console.log(rows);
+            console.log(rows)
         }
 
     });
@@ -85,18 +86,56 @@ app.post('/updateMovie', (req, res) => {
             var title_type = fields.type[0];
             var title_genres = fields.genres.toString();
 
-            var update_spl = "UPDATE Titles Set title_type=\'" + title_type + "\', genres=\'" +title_genres + "\' WHERE tconst=\'" +title_tconst + "\'";
+            var update_sql = "UPDATE Titles Set title_type=\'" + title_type + "\', genres=\'" +title_genres + "\' WHERE tconst=\'" +title_tconst + "\'";
 
             var db = new sqlite3.Database('../imdb.sqlite3');
 
-            db.all(update_spl, (err, rows) =>{
+            db.all(update_sql, (err, rows) =>{
                 if(err){
                     console.log(err);
                 }else{
                     res.writeHead(200, {'Content' : 'text/html'});
-                    res.write("<p>Successfully Updated. <a href=\'http://cisc-dean.stthomas.edu:" + port + "/individual?tconst=" + title_tconst + "\'>Go Back to the title page</a></p>");
+                    res.write("<p>Successfully Updated. <a href=\'http://cisc-dean.stthomas.edu:"+ port +"/individual?tconst=" + title_tconst + "\'>Go Back to the title page</a></p>");
                     res.end();
                 }
+            });
+
+            db.close();
+        }
+    })
+});
+
+app.post('/updatePerson', (req, res) => {
+    var form = new multiparty.Form();
+
+    form.parse(req, (err, fields, files) => {
+        if(err){
+            res.writeHead(404, {'Content-Type' : 'text/plain'});
+            var resStr = 'something wrong here, please go back to home page.';
+            resStr += '<br/><a href="/index.html">home page</a>';
+            res.write(resStr);
+            res.end();
+        }else{
+            //console.log(fields);
+            var person_nconst = fields.nconst
+            var birth_year = parseInt(fields.birth_year);
+            var death_year = fields.death_year;
+            var profession = fields.profession.toString();
+
+            var update_sql = "UPDATE Names Set birth_year=" + birth_year + ", death_year=\'" + death_year + "\', primary_profession=\'" + profession + "\' WHERE nconst=\'" + person_nconst + "\'";
+
+            //console.log(update_sql);
+
+            var db = new sqlite3.Database('../imdb.sqlite3');
+
+            db.all(update_sql, (err, rows) =>{
+               if(err){
+                   console.log(err);
+               } else {
+                   res.writeHead(200, {'Content' : 'text/html'});
+                   res.write("<p>Successfully Updated. <a href=\'http://cisc-dean.stthomas.edu:"+ port +"/individual?nconst=" + person_nconst + "\'>Go Back to the person page</a></p>");
+                   res.end();
+               }
             });
 
             db.close();
@@ -222,7 +261,7 @@ app.get('/individual', (req, res) => {
                         console.log(err);
                     }else{
                         var first_query_obj = format_individual_movie(rows);
-			
+			/*
 			var picturePromise      = new Promise((resolve, reject) => {
         	                poster.GetPosterFromTitleId(rows[0].tconst, (err, data) => {
 					if(err) {
@@ -246,7 +285,7 @@ app.get('/individual', (req, res) => {
 			}, (err) => {
 				console.log(err);
 			});
-                        
+                        */
 			html_table_code = first_query_obj.html_code;
 
                         html_code = html_code.replace('***TABLE***', html_table_code);
@@ -420,7 +459,7 @@ function format_individual_movie(sql_result){
 
         html_code += "<div class=\"col-3\"><h5>Writers: ***writers***</h5></div>";
 
-        html_code += '<div class="col-3">' +
+        html_code += '<div class=\"col-3\" ng-controller=\"PosterController\">' +
             //movie picture here
             '***picture***' + '</div>' +
             '</div>';
@@ -474,15 +513,15 @@ function format_individual_person(sql_result){
                     '<div class="col-4">' +
                         // info here
                         '<p id="nconst_hidden" hidden>' + sql_result.nconst+ '</p>' +
-                        '<p>Birth Year: ' + sql_result.birth_year +'</p>' +
-                        '<p>Death Year: ' + death_year +'</p>' +
-                        '<p>Professions: '+ sql_result.primary_profession +'</p>' +
+                        '<p>Birth Year: ' +'<span id="person_birth_year">'+sql_result.birth_year +'</span></p>' +
+                        '<p>Death Year: ' +'<span id="person_death_year">'+death_year +'</span></p>' +
+                        '<p>Professions: '+'<span id="person_profession">'+sql_result.primary_profession +'</span></p>' +
                     '</div><div class="col-4"><h5>Known For Titles</h5>' +
                         '***known_titles***' +
                     '</div> ' +
-                    '<div class="col-4">' +
+                    '<div class="col-4" ng-controller=\"PosterController\">' +
                         //movie picture here
-                        '***picture***' +
+                        '<img ng-src={{imageSrc}}>' +
                     '</div>' +
                 '</div>';
 
@@ -504,7 +543,18 @@ function title_table_html(sql_result) {
         '<th scope="col">Started Year</th>' +
         '<th scope="col">Ended Year</th>' +
         '</tr>' +
-        '</thead>' +
+        '</thead>' + '<select id="select_type">' +
+        '<option value="all" selected>all</option>' +
+        '<option value="short">short</option>' +
+        '<option value="movie">movie</option>' +
+        '<option value="tvMovie">tvMovie</option>' +
+        '<option value="tvSeries">tvSeries</option>' +
+        '<option value="tvShort">tvShort</option>' +
+        '<option value="tvMiniSeries">tvMiniSeries</option>' +
+        '<option value="tvSpecial">tvSpecial</option>' +
+        '<option value="videoGame">videoGame</option>' +
+        '</select>' +
+        "<button onclick=\"title_filter();\">show</button>" +
         '<tbody>';
 
     for(var i=0; i<sql_result.length; i++){
@@ -516,12 +566,11 @@ function title_table_html(sql_result) {
         }
 
         table_html_code += '<tr>' +
-            '<th scope="row">' + (i+1) + '</th>' +
+            '<th >' + (i+1) + '</th>' +
             '<td>' +
             '<a href=\"http://cisc-dean.stthomas.edu:'+ port +'/individual?tconst=' + sql_result[i].tconst + '\" class=\"list-group-item-action \">' +
-            
-	    sql_result[i].primary_title + '</a>' + '</td>' +
-            '<td>' + sql_result[i].title_type +'</td>' +
+            sql_result[i].primary_title + '</a>' + '</td>' +
+            '<td class="title_type">' + sql_result[i].title_type +'</td>' +
             '<td>' + sql_result[i].start_year +'</td>' +
             '<td>' + end_year +'</td>' +
             '</tr>';
@@ -533,6 +582,48 @@ function title_table_html(sql_result) {
 }
 
 function people_table_html(sql_result){
+    var pro_list = [ 'actor',
+        'actress',
+        'animation_department',
+        'art_department',
+        'art_director',
+        'assistant',
+        'assistant_director',
+        'camera_department',
+        'casting_department',
+        'casting_director',
+        'cinematographer',
+        'composer',
+        'costume_department',
+        'costume_designer',
+        'director',
+        'editor',
+        'editorial_department',
+        'executive',
+        'legal',
+        'location_management',
+        'make_up_department',
+        'manager',
+        'miscellaneous',
+        'music_department',
+        'producer',
+        'production_designer',
+        'production_manager',
+        'publicist',
+        'set_decorator',
+        'sound_department',
+        'soundtrack',
+        'special_effects',
+        'stunts',
+        'talent_agent',
+        'transportation_department',
+        'visual_effects',
+        'writer' ];
+
+    var option_list = "";
+    for(var i=0; i<pro_list.length;i++){
+        option_list += '<option value=\"'+pro_list[i] +'\">'+pro_list[i] +'</option>';
+    }
 
     var table_html_code =
         '<h2>Your Results: </h2>' +
@@ -545,8 +636,14 @@ function people_table_html(sql_result){
         '<th scope="col">Death Year</th>' +
         '<th scope="col">Profession</th>' +
         '</tr>' +
-        '</thead>' +
+        '</thead>' + '<select id="select_pro">' +
+        '<option value="all">all</option>' +
+        '<option value="">(no profession)</option>' +
+        option_list +
+        '</select>' +
+        "<button onclick=\"name_filter();\">show</button>" +
         '<tbody>';
+
 
     for(var i=0; i<sql_result.length; i++){
         var death_year;
@@ -559,12 +656,11 @@ function people_table_html(sql_result){
         table_html_code += '<tr>' +
             '<th scope="row">' + (i+1) + '</th>' +
             '<td>' +
-            '<a href=\"http://cisc-dean.stthomas.edu:' + port +'/individual?nconst='+ sql_result[i].nconst +'\" class=\"list-group-item-action \">' +
-            
-	    sql_result[i].primary_name + '</a>' + '</td>' +
-            '<td id="person_birth_year">' + sql_result[i].birth_year +'</td>' +
-            '<td id="person_death_year">' + death_year +'</td>' +
-            '<td>' + sql_result[i].primary_profession +'</td>' +
+            '<a href=\"http://cisc-dean.stthomas.edu:'+ port +'/individual?nconst='+ sql_result[i].nconst +'\" class=\"list-group-item-action \">' +
+            sql_result[i].primary_name + '</a>' + '</td>' +
+            '<td>' + sql_result[i].birth_year +'</td>' +
+            '<td>' + death_year +'</td>' +
+            '<td class="person_pro">' + sql_result[i].primary_profession +'</td>' +
             '</tr>';
     }
 
