@@ -1,4 +1,14 @@
-var port = 8011;
+"use strict"
+
+var port = 8013;
+// Instead:
+// - make a "get" in my server for /poster/:id
+// - call this get from the js (I can find the id info from the URL - window.location)
+// - the server will make the call to poster.get____();
+// - my get request in angular will bind that data that it receives
+
+(function() {
+var app = angular.module("app", []);
 
 function editing_movie() {
     
@@ -98,6 +108,7 @@ function editing_person(){
     console.log(person_birth_year);
     console.log(person_death_year);
 
+
     var replace_element = "" +
         "<form action=\"/updatePerson\" enctype=\"multipart/form-data\" method=\"POST\">" +
             "<input hidden name='nconst' value=\'"+ person_nconst +"\'>" +
@@ -180,61 +191,28 @@ function default_genres(new_genre, default_genres){
     return '';
 }
 
-function default_profession(new_pro, default_pro){
-    for(var i=0; i<default_pro.length; i++){
-        if(new_pro === default_pro[i]){
-            return 'checked'
-        }
-    }
-    return '';
-}
+app.controller("PosterController", function($scope, $http) {
+	var nconst = $("#nconst_hidden")[0];
+	var tconst = $("#tconst_hidden")[0];
 
-function title_filter (){
-    var select_type = $("#select_type")[0].value;
-    //console.log(select_type);
+	var param;
+	if(nconst) {
+		param = "nconst=" + nconst.innerHTML;
+	} else if(tconst) {
+		param = "tconst=" + tconst.innerHTML;
+	} else {
+		throw "app.js: no nconst_hidden or tconst_hidden element.";
+	}
 
-    var arr = $(".title_type");
-    //console.log(arr);
+	$http.get(("/poster?" + param))
+	.then((response) => {
+		console.log(response.data);
+		$scope.imageSrc = response.data;
+	}, (err) => {
+		console.log(err);
+	});	
+		//	$scope.imageSrc	= src;
 
-    if(select_type === "all"){
-        for(var i=0;i<arr.length;i++){
-            arr[i].parentElement.removeAttribute("style");
-        }
-    }else{
-        for(var i=0;i<arr.length;i++){
-            if(arr[i].innerText !== select_type){
-                arr[i].parentElement.style.display = 'none';
-            }else{
-                arr[i].parentElement.removeAttribute("style");
-            }
-        }
-    }
-}
+}); // Poster Controller
 
-function name_filter() {
-    var select_pro = $("#select_pro")[0].value;
-    //console.log(select_pro);
-
-    var arr = $(".person_pro");
-    //console.log(arr);
-
-
-
-    if(select_pro === "all"){
-        for(var i=0;i<arr.length;i++){
-            arr[i].parentElement.removeAttribute("style");
-        }
-    }else{
-        var pro_arr = [];
-        for(var i=0;i<arr.length;i++){
-            pro_arr = arr[i].innerText.split(',');
-            arr[i].parentElement.style.display = 'none';
-            for(var j=0; j<pro_arr.length; j++){
-                if(pro_arr[j] === select_pro){
-                    console.log(pro_arr[j]);
-                    arr[i].parentElement.removeAttribute("style");
-                }
-            }
-        }
-    }
-}
+})();

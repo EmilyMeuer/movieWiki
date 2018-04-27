@@ -11,8 +11,11 @@ var multiparty = require('multiparty');
 var mime = require('mime');
 var sqlite3 = require('sqlite3').verbose();
 
+// from Dr. Marrinan:
+var poster = require('./imdb_poster.js');
+
 var app = express();
-var port = 8011;
+var port = 8013;
 var public_dir = path.join(__dirname, 'public');
 
 
@@ -232,9 +235,9 @@ app.get('/individual', (req, res) => {
             "Ratings.average_rating, Ratings.num_votes, Names.primary_name, Crew.directors, Crew.writers " +
             "FROM Titles, Principals, Ratings, Names, Crew " +
             "WHERE Titles.tconst = Principals.tconst AND Principals.tconst = Ratings.tconst AND Titles.tconst = Crew.tconst " +
-            "AND Titles.tconst = \"" + url_query.const + "\"" +
-            "AND Principals.nconst = Names.nconst " +
-            "ORDER BY Principals.ordering;";
+            " AND Titles.tconst = \"" + url_query.const + "\"" +
+            " AND Principals.nconst = Names.nconst " +
+            " ORDER BY Principals.ordering;";
 
         fs.readFile('public/results-template.html', (err, data) =>{
             if(err){
@@ -247,13 +250,43 @@ app.get('/individual', (req, res) => {
 
                 var db = new sqlite3.Database('../imdb.sqlite3');
 
-                db.all(sql, function(err,rows){
+/*		picturePromise.then( (data) => {
+			console.log(data);
+		}, (err) => {
+			console.log(err);
+		});
+*/
+		db.all(sql, function(err,rows){
                     if(err){
                         console.log(err);
                     }else{
                         var first_query_obj = format_individual_movie(rows);
+			/*
+			var picturePromise      = new Promise((resolve, reject) => {
+        	                poster.GetPosterFromTitleId(rows[0].tconst, (err, data) => {
+					if(err) {
+						console.log("Promise error");
+						reject(err);
+					} else {
+						resolve(data);
+					}
+				});
+                	});
 
-                        html_table_code = first_query_obj.html_code;
+			picturePromise.then((data) => {
+				console.log(data);
+				var src	= path.join(data.host, data.path);
+				console.log("path = " + src);
+
+				html_code	= html_code.replace('***picture***', '<img src=' + src + '>');
+				res.writeHead(200, {'Content': 'text/html'});
+                                res.write(html_code);
+                                res.end();
+			}, (err) => {
+				console.log(err);
+			});
+                        */
+			html_table_code = first_query_obj.html_code;
 
                         html_code = html_code.replace('***TABLE***', html_table_code);
 
@@ -348,11 +381,39 @@ app.get('/individual', (req, res) => {
 
 });
 
+app.get('/poster', (req, res) => {
+	//console.log(req);
+	//console.log(req.query);
+	
+	// app.js will send either nconst or tconst as id:
+	if(req.query.nconst) {
+		poster.GetPosterFromNameId(req.query.nconst, (err, data) => {
+        		if(err) {
+                		console.log(err);
+               		} else {
+                        	res.writeHead(200, {'Content' : 'text/plain'});
+        			res.write(path.join(data.host, data.path));
+        			res.end();
+                	}
+		});
+	} else if(req.query.tconst) {
+		poster.GetPosterFromTitleId(req.query.tconst, (err, data) => {
+                        if(err) {
+                                console.log(err);
+                        } else {
+                                res.writeHead(200, {'Content' : 'text/plain'});
+                                res.write(path.join(data.host, data.path));
+                                res.end();
+                        }
+                });
+	}
+}); // get - poster
+
 function populate_people_list(sql_result_arr) {
     var html_code = "<ul style='list-style-type: none'>";
 
     for(var i=0;i<sql_result_arr.length;i++){
-        html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:8011/individual?nconst=" +
+        html_code += "<li><a href=\"http://cisc-dean.stthomas.edu:" + port + "/individual?nconst=" +
             sql_result_arr[i].nconst + "\" >"
             + sql_result_arr[i].primary_name + "</a></li>";
     }
@@ -426,9 +487,9 @@ function format_individual_movie(sql_result){
 
         html_code += "<div class=\"col-3\"><h5>Writers: ***writers***</h5></div>";
 
-        html_code += '<div class="col-3">' +
+        html_code += '<div class=\"col-3\" ng-controller=\"PosterController\">' +
             //movie picture here
-            '***picture***' + '</div>' +
+            '<img ng-src=\"http://{{imageSrc}}\">' + '</div>' +
             '</div>';
 
         returnObj.html_code = html_code;
@@ -486,9 +547,9 @@ function format_individual_person(sql_result){
                     '</div><div class="col-4"><h5>Known For Titles</h5>' +
                         '***known_titles***' +
                     '</div> ' +
-                    '<div class="col-4">' +
+                    '<div class="col-4" ng-controller=\"PosterController\">' +
                         //movie picture here
-                        '***picture***' +
+                        '<img ng-src=\"http://{{imageSrc}}\">' +
                     '</div>' +
                 '</div>';
 
