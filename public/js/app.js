@@ -1,9 +1,6 @@
 "use strict"
 
 var port = 8013;
-// Can't do this require here:
-//var poster	= require("../imdb_poster.js");
-
 // Instead:
 // - make a "get" in my server for /poster/:id
 // - call this get from the js (I can find the id info from the URL - window.location)
@@ -195,15 +192,27 @@ function default_genres(new_genre, default_genres){
 }
 
 app.controller("PosterController", function($scope, $http) {
-	
-	poster.GetPosterFromTitleId(rows[0].tconst, (err, data) => {
-		if(err) {
-                	console.log(err);
-                } else {
-                	var src = path.join(data.host, data.path);
-			$scope.imageSrc	= src;
-		}
-	});
-}); // Poseter Controller
+	var nconst = $("#nconst_hidden")[0];
+	var tconst = $("#tconst_hidden")[0];
+
+	var param;
+	if(nconst) {
+		param = "nconst=" + nconst.innerHTML;
+	} else if(tconst) {
+		param = "tconst=" + tconst.innerHTML;
+	} else {
+		throw "app.js: no nconst_hidden or tconst_hidden element.";
+	}
+
+	$http.get(("/poster?" + param))
+	.then((response) => {
+		console.log(response.data);
+		$scope.imageSrc = response.data;
+	}, (err) => {
+		console.log(err);
+	});	
+		//	$scope.imageSrc	= src;
+
+}); // Poster Controller
 
 })();

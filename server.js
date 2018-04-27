@@ -381,6 +381,34 @@ app.get('/individual', (req, res) => {
 
 });
 
+app.get('/poster', (req, res) => {
+	//console.log(req);
+	//console.log(req.query);
+	
+	// app.js will send either nconst or tconst as id:
+	if(req.query.nconst) {
+		poster.GetPosterFromNameId(req.query.nconst, (err, data) => {
+        		if(err) {
+                		console.log(err);
+               		} else {
+                        	res.writeHead(200, {'Content' : 'text/plain'});
+        			res.write(path.join(data.host, data.path));
+        			res.end();
+                	}
+		});
+	} else if(req.query.tconst) {
+		poster.GetPosterFromTitleId(req.query.tconst, (err, data) => {
+                        if(err) {
+                                console.log(err);
+                        } else {
+                                res.writeHead(200, {'Content' : 'text/plain'});
+                                res.write(path.join(data.host, data.path));
+                                res.end();
+                        }
+                });
+	}
+}); // get - poster
+
 function populate_people_list(sql_result_arr) {
     var html_code = "<ul style='list-style-type: none'>";
 
@@ -461,7 +489,7 @@ function format_individual_movie(sql_result){
 
         html_code += '<div class=\"col-3\" ng-controller=\"PosterController\">' +
             //movie picture here
-            '***picture***' + '</div>' +
+            '<img ng-src=\"http://{{imageSrc}}\">' + '</div>' +
             '</div>';
 
         returnObj.html_code = html_code;
@@ -521,7 +549,7 @@ function format_individual_person(sql_result){
                     '</div> ' +
                     '<div class="col-4" ng-controller=\"PosterController\">' +
                         //movie picture here
-                        '<img ng-src={{imageSrc}}>' +
+                        '<img ng-src=\"http://{{imageSrc}}\">' +
                     '</div>' +
                 '</div>';
 
