@@ -1,2 +1,2 @@
-./node_modules
-./imdb.sqlite3
+node_modules
+imdb.sqlite3
