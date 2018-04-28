@@ -204,10 +204,12 @@ app.controller("PosterController", function($scope, $http) {
 		throw "app.js: no nconst_hidden or tconst_hidden element.";
 	}
 
+	console.log(window.location.protocol);
+
 	$http.get(("/poster?" + param))
 	.then((response) => {
 		console.log(response.data);
-		$scope.imageSrc = response.data;
+		$scope.imageSrc = window.location.protocol + "//" + response.data;
 	}, (err) => {
 		console.log(err);
 	});	
