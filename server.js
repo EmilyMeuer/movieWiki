@@ -415,8 +415,6 @@ app.get('/poster', (req, res) => {
 	//console.log(req);
 	//console.log(req.query);
 
-	console.log(window.location.protocol);
-
 	// app.js will send either nconst or tconst as id:
 	if (req.query.nconst) {
 		poster.GetPosterFromNameId(req.query.nconst, (err, data) => {
@@ -461,6 +459,9 @@ function populate_people_list(sql_result_arr) {
 
 function format_individual_movie(sql_result) {
 	var returnObj = {};
+
+	console.log("format_individual_movie");
+	console.log(sql_result);
 
 	var html_code = '<h2>' + sql_result[0].primary_title + '' +
 		'<span onclick="editing_movie()">&nbsp;&nbsp;&nbsp;&nbsp;edit</span></h2>';
@@ -525,7 +526,7 @@ function format_individual_movie(sql_result) {
 
 	html_code += '<div class=\"col-3\" ng-controller=\"PosterController\">' +
 		//movie picture here
-		'<img ng-src=\"http://{{imageSrc}}\" ng-init=\"imageSrc = \"./public/img/poster-placeholder.jpg\"\">' + '</div>' +
+		'<img ng-src=\"{{imageSrc}}\" ng-init=\"imageSrc = \'./img/poster-placeholder.jpg\'\">' + '</div>' +
 		'</div>';
 
 	returnObj.html_code = html_code;
@@ -585,7 +586,7 @@ function format_individual_person(sql_result) {
 		'</div> ' +
 		'<div class="col-4" ng-controller=\"PosterController\">' +
 		//movie picture here
-		'<img ng-src=\"http://{{imageSrc}}\">' +
+		'<img ng-src=\"{{imageSrc}}\" ng-init=\"imageSrc = \'./img/poster-placeholder.jpg\'\">' +
 		'</div>' +
 		'</div>';
 
