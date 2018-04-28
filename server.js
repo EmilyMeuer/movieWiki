@@ -15,7 +15,7 @@ var sqlite3 = require('sqlite3').verbose();
 var poster = require('./imdb_poster.js');
 
 var app = express();
-var port = 8013;
+var port = 8011;
 var public_dir = path.join(__dirname, 'public');
 
 
@@ -117,7 +117,7 @@ app.post('/updatePerson', (req, res) => {
             res.end();
         }else{
             //console.log(fields);
-            var person_nconst = fields.nconst
+            var person_nconst = fields.nconst;
             var birth_year = parseInt(fields.birth_year);
             var death_year = fields.death_year;
             var profession = fields.profession.toString();
@@ -427,7 +427,7 @@ function format_individual_movie(sql_result){
     var returnObj = {};
 
     var html_code =  '<h2>'+ sql_result[0].primary_title +'' +
-        '<span onclick="editing_movie()">&nbsp;&nbsp;&nbsp;&nbsp;edit</span></h2>' ;
+        '<span onclick=\"editing_movie();\">&nbsp;&nbsp;&nbsp;&nbsp;edit</span></h2>' ;
 
     var end_year;
     if(sql_result[0].end_year === null){
