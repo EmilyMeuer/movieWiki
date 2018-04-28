@@ -15,7 +15,9 @@ var sqlite3 = require('sqlite3').verbose();
 var poster = require('./imdb_poster.js');
 
 var app = express();
-var port = 8013;
+
+var port = 8011;
+
 var public_dir = path.join(__dirname, 'public');
 
 
