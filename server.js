@@ -16,7 +16,7 @@ var poster = require('./imdb_poster.js');
 
 var app = express();
 
-var port = 8011;
+var port = 8013;
 
 var public_dir = path.join(__dirname, 'public');
 
@@ -30,9 +30,9 @@ app.get('/index.html', (req, res) => {
 		if (err) {
 			console.log(err);
 			res.writeHead(404, {
-				'Content-Type': 'text/plain'
+				'Content-Type': 'text/html'
 			});
-			res.write('Uh oh - could not find file. here');
+			res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
 			res.end();
 		} else {
 			res.writeHead(200, {
@@ -58,6 +58,11 @@ app.get('/search', (req, res) => {
 	db.all(sql, (err, rows) => {
 		if (err) {
 			console.log(err);
+            res.writeHead(404, {
+                'Content-Type': 'text/html'
+            });
+            res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
+            res.end();
 		} else {
 			console.log(rows)
 		}
@@ -103,6 +108,11 @@ app.post('/updateMovie', (req, res) => {
 			db.all(update_sql, (err, rows) => {
 				if (err) {
 					console.log(err);
+                    res.writeHead(404, {
+                        'Content-Type': 'text/html'
+                    });
+                    res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
+                    res.end();
 				} else {
 					res.writeHead(200, {
 						'Content': 'text/html'
@@ -145,6 +155,11 @@ app.post('/updatePerson', (req, res) => {
 			db.all(update_sql, (err, rows) => {
 				if (err) {
 					console.log(err);
+                    res.writeHead(404, {
+                        'Content-Type': 'text/html'
+                    });
+                    res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
+                    res.end();
 				} else {
 					res.writeHead(200, {
 						'Content': 'text/html'
@@ -192,11 +207,11 @@ app.post('/search', (req, res) => {
 			fs.readFile('public/results-template.html', (err, data) => {
 				if (err) {
 					console.log(err);
-					res.writeHead(404, {
-						'Content-Type': 'text/plain'
-					});
-					res.write('Uh oh - could not find file. here');
-					res.end();
+                    res.writeHead(404, {
+                        'Content-Type': 'text/html'
+                    });
+                    res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
+                    res.end();
 				} else {
 					var db = new sqlite3.Database('imdb.sqlite3');
 
@@ -209,6 +224,11 @@ app.post('/search', (req, res) => {
 					}, function(err, rows) {
 						if (err) {
 							console.log(err);
+                            res.writeHead(404, {
+                                'Content-Type': 'text/html'
+                            });
+                            res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
+                            res.end();
 						} else {
 							var table_html_code = "";
 
@@ -264,11 +284,11 @@ app.get('/individual', (req, res) => {
 		fs.readFile('public/results-template.html', (err, data) => {
 			if (err) {
 				console.log(err);
-				res.writeHead(404, {
-					'Content-Type': 'text/plain'
-				});
-				res.write('Uh oh - could not find file. here');
-				res.end();
+                res.writeHead(404, {
+                    'Content-Type': 'text/html'
+                });
+                res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
+                res.end();
 			} else {
 				var html_code = data.toString('utf8');
 
@@ -283,6 +303,11 @@ app.get('/individual', (req, res) => {
 				db.all(sql, function(err, rows) {
 					if (err) {
 						console.log(err);
+                        res.writeHead(404, {
+                            'Content-Type': 'text/html'
+                        });
+                        res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
+                        res.end();
 					} else {
 						var first_query_obj = format_individual_movie(rows);
 						/*
@@ -317,6 +342,11 @@ app.get('/individual', (req, res) => {
 						db.all(first_query_obj.directors_sql, function(err, rows) {
 							if (err) {
 								console.log(err);
+                                res.writeHead(404, {
+                                    'Content-Type': 'text/html'
+                                });
+                                res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
+                                res.end();
 							} else {
 								var directors_list = populate_people_list(rows);
 								html_code = html_code.replace('***directors***', directors_list);
@@ -366,11 +396,11 @@ app.get('/individual', (req, res) => {
 		fs.readFile("public/results-template.html", (err, data) => {
 			if (err) {
 				console.log(err);
-				res.writeHead(404, {
-					'Content-Type': 'text/plain'
-				});
-				res.write('Uh oh - could not find file. here');
-				res.end();
+                res.writeHead(404, {
+                    'Content-Type': 'text/html'
+                });
+                res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
+                res.end();
 			} else {
 
 				var html_code = data.toString('utf8');
@@ -379,6 +409,11 @@ app.get('/individual', (req, res) => {
 				db.all(sql, (err, rows) => {
 					if (err) {
 						console.log(err);
+                        res.writeHead(404, {
+                            'Content-Type': 'text/html'
+                        });
+                        res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
+                        res.end();
 					} else {
 
 						var first_query_obj = format_individual_person(rows[0]);
@@ -390,6 +425,11 @@ app.get('/individual', (req, res) => {
 						db.all(first_query_obj.titles_name_sql, (err, rows) => {
 							if (err) {
 								console.log(err);
+                                res.writeHead(404, {
+                                    'Content-Type': 'text/html'
+                                });
+                                res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
+                                res.end();
 							} else {
 								var title_list = populate_known_titles(rows);
 								html_code = html_code.replace('***known_titles***', title_list);
@@ -422,6 +462,11 @@ app.get('/poster', (req, res) => {
 		poster.GetPosterFromNameId(req.query.nconst, (err, data) => {
 			if (err) {
 				console.log(err);
+                res.writeHead(404, {
+                    'Content-Type': 'text/html'
+                });
+                res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
+                res.end();
 			} else {
 				res.writeHead(200, {
 					'Content': 'text/plain'
@@ -434,6 +479,11 @@ app.get('/poster', (req, res) => {
 		poster.GetPosterFromTitleId(req.query.tconst, (err, data) => {
 			if (err) {
 				console.log(err);
+                res.writeHead(404, {
+                    'Content-Type': 'text/html'
+                });
+                res.write('Uh oh - could not find file. Or This movie or person is delete from the database.<br/><a href="http://cisc-dean.stthomas.edu:"'+ port +'>click here to go back to main page</a>');
+                res.end();
 			} else {
 				res.writeHead(200, {
 					'Content': 'text/plain'
