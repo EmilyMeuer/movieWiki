@@ -1,5 +1,3 @@
-"use strict"
-
 var port = 8011;
 // Instead:
 // - make a "get" in my server for /poster/:id
