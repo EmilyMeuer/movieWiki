@@ -53,7 +53,7 @@ app.get('/search', (req, res) => {
 
 
 	var sql = "SELECT * FROM Names WHERE nconst=\'nm1727304\'";
-	var db = new sqlite3.Database('../imdb.sqlite3');
+	var db = new sqlite3.Database('imdb.sqlite3');
 
 	db.all(sql, (err, rows) => {
 		if (err) {
@@ -98,7 +98,7 @@ app.post('/updateMovie', (req, res) => {
 
 			var update_sql = "UPDATE Titles Set title_type=\'" + title_type + "\', genres=\'" + title_genres + "\' WHERE tconst=\'" + title_tconst + "\'";
 
-			var db = new sqlite3.Database('../imdb.sqlite3');
+			var db = new sqlite3.Database('imdb.sqlite3');
 
 			db.all(update_sql, (err, rows) => {
 				if (err) {
@@ -140,7 +140,7 @@ app.post('/updatePerson', (req, res) => {
 
 			//console.log(update_sql);
 
-			var db = new sqlite3.Database('../imdb.sqlite3');
+			var db = new sqlite3.Database('imdb.sqlite3');
 
 			db.all(update_sql, (err, rows) => {
 				if (err) {
@@ -198,7 +198,7 @@ app.post('/search', (req, res) => {
 					res.write('Uh oh - could not find file. here');
 					res.end();
 				} else {
-					var db = new sqlite3.Database('../imdb.sqlite3');
+					var db = new sqlite3.Database('imdb.sqlite3');
 
 					// Removes all instances of '(', ')', and ';' characters:
 					var searchTerm = fields.content[0].replace(/(\(|\)|\;)/g, '');
@@ -272,7 +272,7 @@ app.get('/individual', (req, res) => {
 			} else {
 				var html_code = data.toString('utf8');
 
-				var db = new sqlite3.Database('../imdb.sqlite3');
+				var db = new sqlite3.Database('imdb.sqlite3');
 
 				/*		picturePromise.then( (data) => {
 							console.log(data);
@@ -374,7 +374,7 @@ app.get('/individual', (req, res) => {
 			} else {
 
 				var html_code = data.toString('utf8');
-				var db = new sqlite3.Database('../imdb.sqlite3');
+				var db = new sqlite3.Database('imdb.sqlite3');
 
 				db.all(sql, (err, rows) => {
 					if (err) {
